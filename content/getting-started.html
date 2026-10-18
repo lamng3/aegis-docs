@@ -1,0 +1,41 @@
+<!--
+title: Getting started
+kicker: Setup
+lede: Install Aegis, attack a small materials ontology, and roll the attack back.
+description: Install Aegis, run the attack-and-recover example, and use the command line.
+-->
+<h2 id="install">Install</h2>
+<pre><code>git clone https://github.com/lamng3/aegis.git
+cd aegis
+pip install -e ".[dev]"        # Python 3.11 or newer, no runtime dependencies
+pip install -e ".[owl]"        # optional: read OWL and Turtle with rdflib</code></pre>
+
+<h2 id="first">A first attack</h2>
+<pre><code>python examples/attack_and_recover.py</code></pre>
+<pre><code>most depended-on: [('Material', 1.0), ('Metal', 0.6)]
+workload harm: 0.602
+  remove_relation(('Metal', 'subClassOf', 'Material')): affected 3 result elements
+  inject_relation(('Metal', 'subClassOf', 'Temperature')): affected 3 result elements
+  inject_concept(Metall): affected 0 result elements
+  inject_relation(('Metall', 'subClassOf', 'Material')): affected 1 result elements
+rolled back to lsn 2 | honest edit kept: True | healthy: True</code></pre>
+<p>The example ranks the classes the workload depends on, runs a rewire and a flood, attributes the damage to each action, and rolls back to the last healthy state. The look-alike <code>Metall</code> does nothing until a relation attaches it: the same pair that defeats greedy search.</p>
+
+<h2 id="cli">From the command line</h2>
+<pre><code>aegis attack examples/materials.json examples/materials_workload.json --budget 2
+aegis attack examples/materials.json examples/materials_workload.json --budget 2 --search uct</code></pre>
+<p>Beam search finds a rewire of harm 0.600 on this example; UCT, at 200 harm evaluations, finds a chain of harm 1.000 that removes <code>Material</code>. Write the chains with <code>--json chains.json</code> and replay them under the detector:</p>
+<pre><code>aegis detect examples/materials.json examples/materials_workload.json chains.json --threshold 0.05</code></pre>
+
+<h2 id="python">From Python</h2>
+<pre><code>from aegis import ChainBuilder, HealthMonitor, Ontology, VersionedOntology, no_subclass_cycles
+
+onto = Ontology.of(
+    ["Material", "Metal", "Alloy"],
+    [("Metal", "subClassOf", "Material"), ("Alloy", "subClassOf", "Metal")],
+)
+v = VersionedOntology(onto)
+monitor = HealthMonitor({"acyclic": no_subclass_cycles})
+v.subscribe(monitor)                     # checks run on every commit
+v.apply_chain(ChainBuilder().add_concept("Steel").rewire("Alloy", "subClassOf", "Metal", "Material").build())
+v.rollback_to(monitor.last_healthy())    # back to the newest healthy state</code></pre>

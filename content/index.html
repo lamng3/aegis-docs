@@ -1,0 +1,31 @@
+<!--
+title: Overview
+kicker: Notes
+lede: Aegis finds the ontology edits that hurt an agent most, chooses which triples to lock against them, and undoes the damage when an attack lands.
+description: Aegis documentation: attack search, protection by locking, and transactional recovery for ontology-grounded agents.
+-->
+<h2 id="what">What it is</h2>
+<p>An agent that answers questions over a knowledge graph reads the graph through an ontology. The ontology says which classes a query term covers and which links may be followed, so editing a few ontology triples changes the answers while every fact in the graph stays intact. Aegis studies that threat from both sides.</p>
+<ul>
+  <li><strong>Attack.</strong> Given a query workload and a budget of <em>k</em> edits, find the chain that lowers answer quality most. Aegis searches the tree of edit chains with greedy, beam, random, and UCT (a bandit at every node).</li>
+  <li><strong>Protection.</strong> Given room to lock <em>M</em> triples, choose the locks that leave the attacker's best response least harmful.</li>
+  <li><strong>Recovery.</strong> Every edit is a logged transaction with its undo. Aegis measures what each edit changed, detects the first harmful commit, and rolls back while keeping honest edits.</li>
+</ul>
+
+<h2 id="pages">Pages</h2>
+<div class="cards">
+<a class="card" href="getting-started.html"><strong>Getting started</strong><span>Install, attack a toy ontology, roll it back.</span></a>
+<a class="card" href="concepts.html"><strong>Concepts</strong><span>Ontology-grounded queries, harm, and the affected area.</span></a>
+<a class="card" href="attacks.html"><strong>Attack search</strong><span>Operators, feasible chains, and UCT.</span></a>
+<a class="card" href="protection.html"><strong>Protection</strong><span>Locking triples against a best response.</span></a>
+<a class="card" href="recovery.html"><strong>Recovery</strong><span>Transactions, backends, detection, and repair.</span></a>
+<a class="card" href="experiments.html"><strong>Experiments</strong><span>What each experiment measures and how to rerun it.</span></a>
+<a class="card" href="reference.html"><strong>Reference</strong><span>Commands, modules, and extension points.</span></a>
+</div>
+
+<h2 id="install">Install</h2>
+<pre><code>git clone https://github.com/lamng3/aegis.git
+cd aegis
+pip install -e ".[dev]"
+python examples/attack_and_recover.py</code></pre>
+<p>The code is <a href="https://github.com/lamng3/aegis">github.com/lamng3/aegis</a>. The white paper is <code>paper/aegis.pdf</code> in the repository.</p>

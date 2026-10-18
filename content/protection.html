@@ -1,0 +1,33 @@
+<!--
+title: Protection
+kicker: Defender
+lede: Lock M triples so that edits removing them go to a reviewer, and choose the locks that leave the attacker's best response least harmful.
+description: Locking triples against a k-action attacker in aegis.protect: residual harm, three lock strategies, and the attacker oracle.
+-->
+<h2 id="locks">What a lock does</h2>
+<p>A locked triple cannot be removed: <code>remove_relation</code> on it, and <code>remove_concept</code> on either of its ends, are queued for a human reviewer instead of being committed. Injections stay open, since a triple cannot be locked before it exists. Review capacity bounds the locks by <code>M</code>.</p>
+<pre><code>from aegis import allowed
+open_units = allowed(units, locks)       # the units an attacker can still run</code></pre>
+
+<h2 id="problem">The problem</h2>
+<p>The defender moves first and the attacker sees the locks: a leader–follower game. A lock set is judged by its <strong>residual harm</strong>, the harm of the attacker's best chain once the locks are in place, and the defender wants the lock set of at most <code>M</code> triples with the smallest residual. When harmful chains are listed explicitly, deciding whether <code>M</code> locks bring the residual below a threshold is Hitting Set.</p>
+
+<h2 id="strategies">Lock strategies</h2>
+<table>
+<tr><th>Function</th><th>Locks</th></tr>
+<tr><td><code>lock_top_impact(deltas, m)</code></td><td>The <code>m</code> triples with the largest Δ_r; cheap, blind to substitutes</td></tr>
+<tr><td><code>lock_random(deltas, m, seed)</code></td><td><code>m</code> triples drawn from those with Δ_r &gt; 0; the floor</td></tr>
+<tr><td><code>lock_best_response(attacker, onto, units, m, deltas)</code></td><td>One lock per round: run the attacker, then lock the triple of its best chain that leaves the smallest residual</td></tr>
+</table>
+<pre><code>from aegis import beam, lock_best_response, residual, uct
+
+def attacker(us):
+    found = beam(harm, onto, us, budget=2, width=3, k=1)
+    found.append(uct(harm, onto, us, 2, 300))
+    return max(found, key=lambda s: s.harm)
+
+locks = lock_best_response(attacker, onto, units, 6, relation_deltas)
+print(residual(attacker, units, locks))</code></pre>
+
+<h2 id="oracle">The attacker oracle matters</h2>
+<p>Residual harm is only as good as the attacker that computes it. With beam search alone, locking triples on XRD steered beam to a chain more harmful than the one it found without locks, so locking appeared to raise the harm. Evaluate lock sets against the best of several searches, as above.</p>

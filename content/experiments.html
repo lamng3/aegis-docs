@@ -1,0 +1,45 @@
+<!--
+title: Experiments
+kicker: Results
+lede: Each experiment is a script in experiments/ that writes a dated result file; the README and the white paper read from those files.
+description: The Aegis experiments, what each measures, how to rerun it, and the headline results.
+-->
+<h2 id="list">Experiments</h2>
+<table>
+<tr><th>Script</th><th>Measures</th><th>Model calls</th></tr>
+<tr><td><code>real_ontologies/run.py</code></td><td>Impact by group testing, the worst two-action chain, detection, inferred amplification</td><td>None</td></tr>
+<tr><td><code>attack_defense/run.py</code></td><td>Greedy, beam, random, and UCT at equal evaluations; residual harm under M locks</td><td>None</td></tr>
+<tr><td><code>llm_agent/run.py</code></td><td>A language-model agent answering the same workloads in words, honest and attacked</td><td>20 requests, $0.68</td></tr>
+<tr><td><code>memory_defense/run.py</code></td><td>Random attacks on a shared agent memory; repair by attribution against rollback</td><td>None</td></tr>
+</table>
+<p>Every model call is recorded in <code>results/costs/ledger.jsonl</code> with tokens, seconds, and list-price dollars.</p>
+
+<h2 id="attack">Attack search at equal cost</h2>
+<pre><code>uv run python experiments/attack_defense/run.py --json results/attack_defense/2026-10-18.json
+uv run --with matplotlib python paper/figures.py results/attack_defense/2026-10-18.json</code></pre>
+<p>At equal harm evaluations (beam's count), the most harmful three-action chain each search finds; random and UCT are means of 5 seeds.</p>
+<table>
+<tr><th>Ontology</th><th>Greedy</th><th>Beam</th><th>Random</th><th>UCT</th><th>Evaluations</th></tr>
+<tr><td>EBSD</td><td>0.600</td><td>0.600</td><td>0.533</td><td>0.493</td><td>167</td></tr>
+<tr><td>MatProc</td><td>0.619</td><td>1.000</td><td>0.776</td><td>0.805</td><td>119</td></tr>
+<tr><td>XRD</td><td>0.444</td><td>0.444</td><td>0.533</td><td>0.600</td><td>91</td></tr>
+<tr><td>Mouse anatomy</td><td>0.803</td><td>0.945</td><td>0.809</td><td>0.884</td><td>104</td></tr>
+</table>
+<p>UCT beats greedy and beam on XRD at every budget from two actions up (0.763 against 0.644 at four), ties beam at two actions elsewhere, and trails it at three and four where harm is close to additive. Given 200 evaluations it reaches 1.000 on MatProc and 0.945 on mouse anatomy with no spread across seeds; random search still varies by 0.04 to 0.12.</p>
+
+<h2 id="protection">Protection by locking</h2>
+<p>Residual harm of a two-action attacker (the best of beam and UCT) after locking six triples:</p>
+<table>
+<tr><th>Ontology</th><th>No locks</th><th>Random</th><th>Top impact</th><th>Best response</th></tr>
+<tr><td>EBSD</td><td>0.400</td><td>0.320</td><td>0.400</td><td>0.133</td></tr>
+<tr><td>MatProc</td><td>0.800</td><td>0.459</td><td>0.025</td><td>0.025</td></tr>
+<tr><td>XRD</td><td>0.400</td><td>0.400</td><td>0.212</td><td>0.030</td></tr>
+<tr><td>Mouse anatomy</td><td>0.745</td><td>0.675</td><td>0.029</td><td>0.019</td></tr>
+</table>
+<p>Best response is never worse than top impact. On EBSD, six top-impact locks change nothing because the attacker moves to the next query's triples. Ten well-chosen locks remove all of a two-action attacker's harm on every ontology.</p>
+
+<h2 id="agent">A language-model agent</h2>
+<p>Claude Opus 5.5, writing SPARQL against a labeled schema, answers every honest question on all four ontologies and then suffers exactly the template answerer's harm under the worst two-action chain (0.400, 0.800, 0.400, and 0.745). On hierarchy questions the damage is in the ontology, so the cheap template answerer is a faithful proxy during attack search.</p>
+
+<h2 id="memory">Agent memory</h2>
+<p>Over 20 random attacks of one to three forged or removed findings, every attack was detected. Repair by attribution restored every probe and kept all honest work done after the attack; rollback restored the probes and lost that work.</p>
