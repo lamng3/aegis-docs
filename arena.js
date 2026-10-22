@@ -20,7 +20,7 @@
     return n;
   }
   function mount(root) {
-  var data, board = 0, group = "all", query = "", sortKey = "score", sortDir = -1;
+  var data, board = 0, group = "all", query = "", sortKey = "score", sortDir = -1, refocus = false;
 
   function ranked(b) {
     // rank by the primary score, ties sharing a rank; the table may be sorted otherwise, ranks stay with the score
@@ -86,13 +86,18 @@
     if (bi === 0) seg[0].childNodes.forEach(function (btn, i) { btn.onclick = function () { board = i; sortKey = "score"; sortDir = b.lowerIsBetter ? 1 : -1; render(); }; });
     seg[seg.length - 1].childNodes.forEach(function (btn, i) { btn.onclick = function () { group = i === 0 ? "all" : groups[i - 1]; render(); }; });
     var input = bar.querySelector("input");
-    input.oninput = function () { query = input.value.trim().toLowerCase(); render(); input.focus(); input.setSelectionRange(input.value.length, input.value.length); };
+    input.oninput = function () { query = input.value.trim().toLowerCase(); refocus = true; render(); };
 
     root.className = "arena";
     root.replaceChildren.apply(root, [bar, b.sub ? el("p", { class: "a-sub", text: b.sub }) : null, podium,
       el("div", { class: "scroll" }, el("table", {}, el("thead", {}, head), body)),
       rows.length ? null : el("p", { class: "a-foot", text: "No system matches." }),
       el("p", { class: "a-foot", text: data.note || "" })].filter(Boolean));
+    if (refocus) { // the redraw replaced the search box, so put the cursor back at the end of what was typed
+      var box = root.querySelector("input[type=search]");
+      box.focus(); box.setSelectionRange(box.value.length, box.value.length);
+      refocus = false;
+    }
   }
 
   fetch(root.dataset.src).then(function (r) { return r.json(); }).then(function (d) { data = d; sortDir = d.boards[0].lowerIsBetter ? 1 : -1; render(); });
