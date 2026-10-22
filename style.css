@@ -245,3 +245,6 @@ main:has(.arena) { max-width: none; }
 @media (max-width: 720px) { .arena .opt { display: none; } .arena .meter { min-width: 120px; } }
 :root { --gold: #b8860b; --silver: #8a94a3; --bronze: #b0693a; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --gold: #d4a62a; --silver: #9aa4b2; --bronze: #c97b4a; } }
+
+.btn.solid:hover:not(:disabled) { background: var(--primary); color: var(--bg); filter: brightness(1.12); }
+.btn.solid:disabled { opacity: 0.5; }
