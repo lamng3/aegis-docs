@@ -111,6 +111,7 @@ HOME = """<section class="hero">
   </div>
   <div class="demo-card" id="demo">
     <div class="head"><h3>Attack, then defend</h3><span class="tag">recorded <b>experiment results</b></span></div>
+    <p class="try">Try it: Drag the sliders: how many edits the attacker gets, and how many triples the defender locks.</p>
     <div class="tabs" id="tabs" role="tablist"></div>
     <div class="slider"><span>edits</span><input id="budget" type="range" min="1" max="4" value="2" aria-label="Attacker edits"><span id="budget-out"></span></div>
     <div class="bars" id="attack"></div>
