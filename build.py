@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent
 PAGES = [
     ("index", "Overview"),
     ("getting-started", "Getting started"),
+    ("playground", "Playground"),
     ("concepts", "Concepts"),
     ("attacks", "Attack search"),
     ("protection", "Protection"),
@@ -45,7 +46,7 @@ LAYOUT = """<!DOCTYPE html>
   <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
   <nav class="site">
     <a href="getting-started.html">Start</a>
-    <a href="attacks.html">Attacks</a>
+    <a href="playground.html">Playground</a>
     <a href="reference.html">Reference</a>
     <label class="nav-button" for="nav-toggle">Menu</label>
     <a href="https://github.com/lamng3/aegis" class="pill">GitHub ↗</a>
@@ -74,7 +75,7 @@ HEADER = """<header class="site">
   <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
   <nav class="site">
     <a href="getting-started.html">Start</a>
-    <a href="attacks.html">Attacks</a>
+    <a href="playground.html">Playground</a>
     <a href="reference.html">Reference</a>
     <label class="nav-button" for="nav-toggle">Menu</label>
     <a href="https://github.com/lamng3/aegis" class="pill">GitHub ↗</a>
@@ -90,6 +91,7 @@ HEAD = """<meta charset="utf-8">
 <link rel="stylesheet" href="style.css">"""
 
 CARDS = [
+    ("playground", "Playground", "Attack a small ontology in the browser: edit it, search for the worst chain, find the damage, and roll back."),
     ("getting-started", "Getting started", "Run the example: attack a small materials ontology, then recover."),
     ("concepts", "Concepts", "Counterfactual attacks, and the affected area that measures them."),
     ("attacks", "Attack search", "Greedy, beam, random, and UCT over the tree of edit chains."),
@@ -106,7 +108,7 @@ HOME = """<section class="hero">
 <span class="prompt">$ </span>uv sync &amp;&amp; uv run python examples/attack_and_recover.py</pre>
     <div class="actions">
       <a class="btn solid" href="getting-started.html">Get started</a>
-      <a class="btn" href="concepts.html">Concepts</a>
+      <a class="btn" href="playground.html">Playground</a>
       <a class="btn" href="experiments.html">Experiments</a>
     </div>
   </div>

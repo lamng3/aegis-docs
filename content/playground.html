@@ -1,0 +1,18 @@
+<!--
+title: Playground
+kicker: Try it
+lede: Attack a small ontology in your browser: edit it, let the library's search find the worst chain of edits, see which action did the damage, and roll back to the last healthy state.
+description: Attack a small materials ontology in the browser, find the damage, and roll back, with the library's greedy and beam attack searches ported and checked against the Python.
+-->
+<div class="callout warning" role="note"><span class="label">What runs where</span><p>Everything runs in your browser. Aegis itself is Python and is not run here: the page runs a <strong>JavaScript port</strong> of the small materials example (<code>examples/attack_and_recover.py</code>): the ontology and its four edit primitives, the workload's F1 and harm, per-action attribution, the versioned log with rollback and last-healthy, and the library's greedy and beam attack searches. Its tests recompute the impacts, the candidate edits, the searches at four budgets, and 40 random edit chains against the Python and compare every number. The real ontologies, UCT search, protection by locking, and the memory defenses are not run here.</p></div>
+<div id="eplay" aria-label="Attack playground">Loading the playground…</div>
+<script src="pg.js"></script>
+<script src="playground.js"></script>
+<h2 id="things-to-try">Things to try</h2>
+<ol>
+<li>Press <strong>An honest edit</strong>, then <strong>The example attack</strong>. The workload's F1 falls, the harm is the mean drop, and <strong>Which action did what</strong> shows how many result elements each action changed. The first two actions rewire Metal under Temperature and affect the most result elements; the last two flood in a look-alike concept.</li>
+<li>Press <strong>Find the worst chain</strong> with beam search and a budget of two. The library's search proposes the most harmful chains it finds within the budget. Apply one and compare it with your own attack.</li>
+<li>In <strong>Recovery</strong>, the last healthy state is the one just before the attack, so rolling back keeps the honest edit. Roll back, then press <strong>Start over</strong> to compare with the original.</li>
+</ol>
+<h2 id="what-it-keeps">What it keeps</h2>
+<p>Your edits are saved in this browser (localStorage) and replayed when the page loads. Start over clears them. Nothing is sent anywhere.</p>
