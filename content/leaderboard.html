@@ -1,0 +1,19 @@
+<!--
+title: Leaderboard
+kicker: Experiments
+lede: Attack strategies and defenses ranked on four real ontologies, from the recorded experiments.
+description: Aegis attack search strategies and protection by locking, ranked by harm on four real ontologies.
+-->
+<p>Two boards, from the same experiment. In the first the strongest attacker ranks first: the search that finds the most harmful chain of edits at equal cost. In the second the best defense ranks first: the one that leaves the least harm. Aegis's own searches and defenses are highlighted next to the simple baselines they have to beat.</p>
+<h2 id="attack">Attack: who finds the worst chain?</h2>
+<div data-arena data-src="leaderboard-attack.json"></div>
+<h2 id="defense">Defense: who leaves the least harm?</h2>
+<div data-arena data-src="leaderboard-defense.json"></div>
+<script src="arena.js"></script>
+<h2 id="how-to-read-it">How to read it</h2>
+<ul>
+<li><strong>Harm</strong> is the mean F1 drop over the five "What kinds of X are there?" queries, from 0 to 1.</li>
+<li><strong>Attack</strong> compares the searches at equal evaluations: beam search runs to completion and sets the budget that random search and UCT get. Beam can win at small budgets; <a href="attacks.html">Attack search</a> shows how UCT catches up as the budget grows.</li>
+<li><strong>Defense</strong> is against a two-edit attacker. Residual harm is the best of beam search and UCT against the locked ontology, so a lock set is not credited for a chain the search missed.</li>
+<li>Click a column to sort. Ranks stay with the headline column.</li>
+</ul>

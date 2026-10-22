@@ -22,6 +22,7 @@ PAGES = [
     ("protection", "Protection"),
     ("recovery", "Recovery"),
     ("experiments", "Experiments"),
+    ("leaderboard", "Leaderboard"),
     ("reference", "Reference"),
 ]
 
