@@ -3,15 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Overview — Aegis</title>
-<meta name="description" content="Aegis documentation: attack search, protection by locking, and transactional recovery for ontology-grounded agents.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=TikTok+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<title>Aegis — attack search, protection, and recovery for ontology-grounded agents</title>
+<meta name="description" content="Aegis documentation: attack search, protection by locking, and transactional recovery for ontology-grounded agents.">
 </head>
 <body>
 <a class="skip" href="#content">Skip to content</a>
+<input id="nav-toggle" class="nav-toggle" type="checkbox">
 <header class="site">
   <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
   <nav class="site">
@@ -22,17 +23,37 @@
     <a href="https://github.com/lamng3/aegis" class="pill">GitHub ↗</a>
   </nav>
 </header>
-<input id="nav-toggle" class="nav-toggle" type="checkbox">
-<div class="layout">
-<nav class="nav">
-<a class="brand-desk" href="index.html">Aegis</a><a href="index.html" aria-current="page">Overview</a><a href="getting-started.html">Getting started</a><a href="concepts.html">Concepts</a><a href="attacks.html">Attack search</a><a href="protection.html">Protection</a><a href="recovery.html">Recovery</a><a href="experiments.html">Experiments</a><a href="reference.html">Reference</a>
-</nav>
-<main id="content">
-<p class="kicker">Notes</p>
-<h1>Overview</h1>
-<p class="lede">Aegis finds the ontology edits that hurt an agent most, chooses which triples to lock against them, and undoes the damage when an attack lands.</p>
-<nav class="toc"><strong>On this page</strong><ol><li><a href="#what">What it is</a></li><li><a href="#pages">Pages</a></li><li><a href="#install">Install</a></li></ol></nav>
-<h2 id="what">What it is</h2>
+<main class="wrap" id="content" style="max-width:1280px">
+<section class="hero">
+  <div>
+    <h1>Attack search, protection, and recovery for ontology-grounded agents</h1>
+    <p class="lede">Aegis finds the ontology edits that hurt an agent most, chooses which triples to lock against them, and undoes the damage when an attack lands.</p>
+    <pre class="install"><span class="prompt">$ </span>git clone https://github.com/lamng3/aegis.git &amp;&amp; cd aegis
+<span class="prompt">$ </span>uv sync &amp;&amp; uv run python examples/attack_and_recover.py</pre>
+    <div class="actions">
+      <a class="btn solid" href="getting-started.html">Get started</a>
+      <a class="btn" href="concepts.html">Concepts</a>
+      <a class="btn" href="experiments.html">Experiments</a>
+    </div>
+  </div>
+  <div class="demo-card" id="demo">
+    <div class="head"><h3>Attack, then defend</h3><span class="tag">recorded <b>experiment results</b></span></div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="slider"><span>edits</span><input id="budget" type="range" min="1" max="4" value="2" aria-label="Attacker edits"><span id="budget-out"></span></div>
+    <div class="bars" id="attack"></div>
+    <p class="chain" id="chain"></p>
+    <div class="slider"><span>locks</span><input id="locks" type="range" min="0" max="5" value="3" aria-label="Locked triples"><span id="locks-out"></span></div>
+    <div class="bars" id="defense"></div>
+    <p class="chain" id="locked"></p>
+    <p class="note">Harm runs from 0 to 1 over the ontology's query workload. Top bars: the most harmful chain each search finds. Bottom bars: harm left after the locks, against a two-edit attacker. The numbers come from <code>results/attack_defense/2026-10-18.json</code>; this page computes nothing.</p>
+  </div>
+</section>
+<section class="block">
+  <h2>What it does</h2>
+  <p class="sub">An agent reads its knowledge graph through an ontology. Aegis treats the ontology like data a database must defend.</p>
+  <div class="cards"><a class="card" href="getting-started.html"><strong>Getting started</strong><span>Run the example: attack a small materials ontology, then recover.</span></a><a class="card" href="concepts.html"><strong>Concepts</strong><span>Counterfactual attacks, and the affected area that measures them.</span></a><a class="card" href="attacks.html"><strong>Attack search</strong><span>Greedy, beam, random, and UCT over the tree of edit chains.</span></a><a class="card" href="protection.html"><strong>Protection</strong><span>Lock the triples that leave the attacker&#x27;s best response least harmful.</span></a><a class="card" href="recovery.html"><strong>Recovery</strong><span>Find the last healthy state in the log and roll back, keeping honest edits.</span></a><a class="card" href="experiments.html"><strong>Experiments</strong><span>Four ontologies, with the numbers behind the demo.</span></a></div>
+</section>
+<section class="block"><div class="prose-home"><h2 id="what">What it is</h2>
 <p>An agent that answers questions over a knowledge graph reads the graph through an ontology. The ontology says which classes a query term covers and which links may be followed, so editing a few ontology triples changes the answers while every fact in the graph stays intact. Aegis studies that threat from both sides.</p>
 <ul>
   <li><strong>Attack.</strong> Given a query workload and a budget of <em>k</em> edits, find the chain that lowers answer quality most. Aegis searches the tree of edit chains with greedy, beam, random, and UCT (a bandit at every node).</li>
@@ -56,9 +77,9 @@
 cd aegis
 pip install -e ".[dev]"
 python examples/attack_and_recover.py</code></pre>
-<p>The code is <a href="https://github.com/lamng3/aegis">github.com/lamng3/aegis</a>.</p>
+<p>The code is <a href="https://github.com/lamng3/aegis">github.com/lamng3/aegis</a>.</p></div></section>
+<script src="demo.js"></script>
 </main>
-</div>
-<footer class="site">Aegis notes. Attack search, protection, and recovery for ontology-grounded agents. Generated by build.py.</footer>
+<footer class="site">Aegis by <a href="https://github.com/lamng3">Lam Nguyen</a> · attack search, protection, and recovery for ontology-grounded agents</footer>
 </body>
 </html>

@@ -68,6 +68,100 @@ LAYOUT = """<!DOCTYPE html>
 """
 
 
+HEADER = """<header class="site">
+  <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
+  <nav class="site">
+    <a href="getting-started.html">Start</a>
+    <a href="attacks.html">Attacks</a>
+    <a href="reference.html">Reference</a>
+    <label class="nav-button" for="nav-toggle">Menu</label>
+    <a href="https://github.com/lamng3/aegis" class="pill">GitHub ↗</a>
+  </nav>
+</header>"""
+
+HEAD = """<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=TikTok+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">"""
+
+CARDS = [
+    ("getting-started", "Getting started", "Run the example: attack a small materials ontology, then recover."),
+    ("concepts", "Concepts", "Counterfactual attacks, and the affected area that measures them."),
+    ("attacks", "Attack search", "Greedy, beam, random, and UCT over the tree of edit chains."),
+    ("protection", "Protection", "Lock the triples that leave the attacker's best response least harmful."),
+    ("recovery", "Recovery", "Find the last healthy state in the log and roll back, keeping honest edits."),
+    ("experiments", "Experiments", "Four ontologies, with the numbers behind the demo."),
+]
+
+HOME = """<section class="hero">
+  <div>
+    <h1>Attack search, protection, and recovery for ontology-grounded agents</h1>
+    <p class="lede">LEDE</p>
+    <pre class="install"><span class="prompt">$ </span>git clone https://github.com/lamng3/aegis.git &amp;&amp; cd aegis
+<span class="prompt">$ </span>uv sync &amp;&amp; uv run python examples/attack_and_recover.py</pre>
+    <div class="actions">
+      <a class="btn solid" href="getting-started.html">Get started</a>
+      <a class="btn" href="concepts.html">Concepts</a>
+      <a class="btn" href="experiments.html">Experiments</a>
+    </div>
+  </div>
+  <div class="demo-card" id="demo">
+    <div class="head"><h3>Attack, then defend</h3><span class="tag">recorded <b>experiment results</b></span></div>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="slider"><span>edits</span><input id="budget" type="range" min="1" max="4" value="2" aria-label="Attacker edits"><span id="budget-out"></span></div>
+    <div class="bars" id="attack"></div>
+    <p class="chain" id="chain"></p>
+    <div class="slider"><span>locks</span><input id="locks" type="range" min="0" max="5" value="3" aria-label="Locked triples"><span id="locks-out"></span></div>
+    <div class="bars" id="defense"></div>
+    <p class="chain" id="locked"></p>
+    <p class="note">Harm runs from 0 to 1 over the ontology's query workload. Top bars: the most harmful chain each search finds. Bottom bars: harm left after the locks, against a two-edit attacker. The numbers come from <code>SOURCE</code>; this page computes nothing.</p>
+  </div>
+</section>
+<section class="block">
+  <h2>What it does</h2>
+  <p class="sub">An agent reads its knowledge graph through an ontology. Aegis treats the ontology like data a database must defend.</p>
+  <div class="cards">CARDLIST</div>
+</section>
+<section class="block"><div class="prose-home">BODY</div></section>
+<script src="demo.js"></script>"""
+
+
+def home_page(meta, body):
+    import json
+
+    source = json.loads((ROOT / "demo-data.json").read_text())["source"]
+    cards = "".join(
+        f'<a class="card" href="{s}.html"><strong>{html.escape(t)}</strong><span>{html.escape(d)}</span></a>'
+        for s, t, d in CARDS
+    )
+    hero = (
+        HOME.replace("LEDE", html.escape(meta["lede"]))
+        .replace("SOURCE", source)
+        .replace("CARDLIST", cards)
+        .replace("BODY", body)
+    )
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+{HEAD}
+<title>Aegis — attack search, protection, and recovery for ontology-grounded agents</title>
+<meta name="description" content="{html.escape(meta["description"], quote=True)}">
+</head>
+<body>
+<a class="skip" href="#content">Skip to content</a>
+<input id="nav-toggle" class="nav-toggle" type="checkbox">
+{HEADER}
+<main class="wrap" id="content" style="max-width:1280px">
+{hero}
+</main>
+<footer class="site">Aegis by <a href="https://github.com/lamng3">Lam Nguyen</a> · attack search, protection, and recovery for ontology-grounded agents</footer>
+</body>
+</html>
+"""
+
+
 def parse(text: str) -> tuple[dict[str, str], str]:
     m = re.match(r"\s*<!--(.*?)-->\s*", text, re.S)
     meta = dict(line.split(":", 1) for line in m.group(1).strip().splitlines())
@@ -87,6 +181,9 @@ def main() -> None:
         meta, body = parse((ROOT / "content" / f"{slug}.html").read_text(encoding="utf-8"))
         current = ' aria-current="page"'
         nav = "".join(f'<a href="{s}.html"{current if s == slug else ""}>{name}</a>' for s, name in PAGES)
+        if slug == "index":
+            (ROOT / "index.html").write_text(home_page(meta, body.strip()), encoding="utf-8")
+            continue
         page = LAYOUT.format(
             title=meta.get("title", label),
             kicker=meta["kicker"],
