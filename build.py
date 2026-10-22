@@ -197,6 +197,9 @@ def main() -> None:
         )
         (ROOT / f"{slug}.html").write_text(page, encoding="utf-8")
     print(f"built {len(PAGES)} pages")
+    import normalize
+
+    normalize.run(ROOT)
 
 
 if __name__ == "__main__":
