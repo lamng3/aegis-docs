@@ -303,3 +303,4 @@ main:has(.pg) { max-width: none; }
 .chain { font: 12.5px/1.6 var(--mono); }
 .chain li { margin: 2px 0; }
 .f1 { font-variant-numeric: tabular-nums; }
+.pg progress { accent-color: var(--primary); width: 10em; height: 8px; }
