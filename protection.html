@@ -15,7 +15,7 @@
 <a class="skip" href="#content">Skip to content</a>
 <header class="site">
   <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
-  <nav class="site">
+  <nav class="site" aria-label="Site">
     <a href="getting-started.html">Start</a>
     <a href="attacks.html">Attacks</a>
     <a href="reference.html">Reference</a>
@@ -25,14 +25,14 @@
 </header>
 <input id="nav-toggle" class="nav-toggle" type="checkbox">
 <div class="layout">
-<nav class="nav">
+<nav class="nav" aria-label="Manual pages">
 <a class="brand-desk" href="index.html">Aegis Manual</a><input class="search" id="q" type="search" placeholder="Search the manual" autocomplete="off"><ul id="results" hidden></ul><a href="index.html">Overview</a><a href="getting-started.html">Getting started</a><a href="concepts.html">Concepts</a><a href="attacks.html">Attack search</a><a href="protection.html" aria-current="page">Protection</a><a href="recovery.html">Recovery</a><a href="experiments.html">Experiments</a><a href="leaderboard.html">Leaderboard</a><a href="reference.html">Reference</a>
 </nav>
 <main id="content">
 <p class="kicker">Defender</p>
 <h1>Protection</h1>
 <p class="lede">Lock M triples so that edits removing them go to a reviewer, and choose the locks that leave the attacker's best response least harmful.</p>
-<nav class="toc"><strong>On this page</strong><ol><li><a href="#locks">What a lock does</a></li><li><a href="#problem">The problem</a></li><li><a href="#strategies">Lock strategies</a></li><li><a href="#oracle">The attacker oracle matters</a></li></ol></nav>
+<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol><li><a href="#locks">What a lock does</a></li><li><a href="#problem">The problem</a></li><li><a href="#strategies">Lock strategies</a></li><li><a href="#oracle">The attacker oracle matters</a></li></ol></nav>
 <h2 id="locks">What a lock does</h2>
 <p>A locked triple cannot be removed: <code>remove_relation</code> on it, and <code>remove_concept</code> on either of its ends, are queued for a human reviewer instead of being committed. Injections stay open, since a triple cannot be locked before it exists. Review capacity bounds the locks by <code>M</code>.</p>
 <pre><code>from aegis import allowed
@@ -42,12 +42,11 @@ open_units = allowed(units, locks)       # the units an attacker can still run</
 <p>The defender moves first and the attacker sees the locks: a leader–follower game. A lock set is judged by its <strong>residual harm</strong>, the harm of the attacker's best chain once the locks are in place, and the defender wants the lock set of at most <code>M</code> triples with the smallest residual. When harmful chains are listed explicitly, deciding whether <code>M</code> locks bring the residual below a threshold is Hitting Set.</p>
 
 <h2 id="strategies">Lock strategies</h2>
-<table>
-<tr><th>Function</th><th>Locks</th></tr>
+<table><thead><tr><th scope="col">Function</th><th scope="col">Locks</th></tr></thead><tbody>
 <tr><td><code>lock_top_impact(deltas, m)</code></td><td>The <code>m</code> triples with the largest Δ_r; cheap, blind to substitutes</td></tr>
 <tr><td><code>lock_random(deltas, m, seed)</code></td><td><code>m</code> triples drawn from those with Δ_r &gt; 0; the floor</td></tr>
 <tr><td><code>lock_best_response(attacker, onto, units, m, deltas)</code></td><td>One lock per round: run the attacker, then lock the triple of its best chain that leaves the smallest residual</td></tr>
-</table>
+</tbody></table>
 <pre><code>from aegis import beam, lock_best_response, residual, uct
 
 def attacker(us):

@@ -15,7 +15,7 @@
 <a class="skip" href="#content">Skip to content</a>
 <header class="site">
   <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
-  <nav class="site">
+  <nav class="site" aria-label="Site">
     <a href="getting-started.html">Start</a>
     <a href="attacks.html">Attacks</a>
     <a href="reference.html">Reference</a>
@@ -25,14 +25,14 @@
 </header>
 <input id="nav-toggle" class="nav-toggle" type="checkbox">
 <div class="layout">
-<nav class="nav">
+<nav class="nav" aria-label="Manual pages">
 <a class="brand-desk" href="index.html">Aegis Manual</a><input class="search" id="q" type="search" placeholder="Search the manual" autocomplete="off"><ul id="results" hidden></ul><a href="index.html">Overview</a><a href="getting-started.html">Getting started</a><a href="concepts.html">Concepts</a><a href="attacks.html">Attack search</a><a href="protection.html">Protection</a><a href="recovery.html">Recovery</a><a href="experiments.html">Experiments</a><a href="leaderboard.html" aria-current="page">Leaderboard</a><a href="reference.html">Reference</a>
 </nav>
 <main id="content">
 <p class="kicker">Experiments</p>
 <h1>Leaderboard</h1>
 <p class="lede">Attack strategies and defenses ranked on four real ontologies, from the recorded experiments.</p>
-<nav class="toc"><strong>On this page</strong><ol><li><a href="#attack">Attack: who finds the worst chain?</a></li><li><a href="#defense">Defense: who leaves the least harm?</a></li><li><a href="#how-to-read-it">How to read it</a></li></ol></nav>
+<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol><li><a href="#attack">Attack: who finds the worst chain?</a></li><li><a href="#defense">Defense: who leaves the least harm?</a></li><li><a href="#how-to-read-it">How to read it</a></li></ol></nav>
 <p>Two boards, from the same experiment. In the first the strongest attacker ranks first: the search that finds the most harmful chain of edits at equal cost. In the second the best defense ranks first: the one that leaves the least harm. Aegis's own searches and defenses are highlighted next to the simple baselines they have to beat.</p>
 <h2 id="attack">Attack: who finds the worst chain?</h2>
 <div data-arena data-src="leaderboard-attack.json"></div>

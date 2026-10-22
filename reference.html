@@ -15,7 +15,7 @@
 <a class="skip" href="#content">Skip to content</a>
 <header class="site">
   <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
-  <nav class="site">
+  <nav class="site" aria-label="Site">
     <a href="getting-started.html">Start</a>
     <a href="attacks.html">Attacks</a>
     <a href="reference.html">Reference</a>
@@ -25,28 +25,26 @@
 </header>
 <input id="nav-toggle" class="nav-toggle" type="checkbox">
 <div class="layout">
-<nav class="nav">
+<nav class="nav" aria-label="Manual pages">
 <a class="brand-desk" href="index.html">Aegis Manual</a><input class="search" id="q" type="search" placeholder="Search the manual" autocomplete="off"><ul id="results" hidden></ul><a href="index.html">Overview</a><a href="getting-started.html">Getting started</a><a href="concepts.html">Concepts</a><a href="attacks.html">Attack search</a><a href="protection.html">Protection</a><a href="recovery.html">Recovery</a><a href="experiments.html">Experiments</a><a href="leaderboard.html">Leaderboard</a><a href="reference.html" aria-current="page">Reference</a>
 </nav>
 <main id="content">
 <p class="kicker">Lookup</p>
 <h1>Reference</h1>
 <p class="lede">Commands, modules, and the registries that extend Aegis.</p>
-<nav class="toc"><strong>On this page</strong><ol><li><a href="#cli">Commands</a></li><li><a href="#modules">Modules</a></li><li><a href="#extend">Extension points</a></li></ol></nav>
+<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol><li><a href="#cli">Commands</a></li><li><a href="#modules">Modules</a></li><li><a href="#extend">Extension points</a></li></ol></nav>
 <h2 id="cli">Commands</h2>
-<table>
-<tr><th>Command</th><th>Does</th></tr>
+<table><thead><tr><th scope="col">Command</th><th scope="col">Does</th></tr></thead><tbody>
 <tr><td><code>aegis init</code></td><td>Create an object store (default <code>.aegis</code>)</td></tr>
 <tr><td><code>aegis put KIND FILE</code></td><td>Store an ontology, KG, query, or profile; prints <code>kind:id</code></td></tr>
 <tr><td><code>aegis get KIND:ID</code></td><td>Print a stored object</td></tr>
 <tr><td><code>aegis runs [--task T]</code></td><td>List logged runs <code>&lt;Q, O, KG, R&gt;</code></td></tr>
 <tr><td><code>aegis attack ONTO WORKLOAD [--budget k] [--search beam|uct] [--evaluations E] [--json F]</code></td><td>Rank the classes the workload depends on and find the most harmful chains</td></tr>
 <tr><td><code>aegis detect ONTO WORKLOAD CHAIN [--threshold t]</code></td><td>Apply a chain under the detector and report</td></tr>
-</table>
+</tbody></table>
 
 <h2 id="modules">Modules</h2>
-<table>
-<tr><th>Module</th><th>Holds</th></tr>
+<table><thead><tr><th scope="col">Module</th><th scope="col">Holds</th></tr></thead><tbody>
 <tr><td><code>actions</code>, <code>versioned</code></td><td>The four primitives, chains, the transactional log</td></tr>
 <tr><td><code>impact</code>, <code>forensics</code></td><td>Δ_c, Δ_r, group testing, harm, AFF, attribution, closure delta</td></tr>
 <tr><td><code>attacks</code>, <code>flood</code></td><td>Units, greedy, beam, random, UCT; look-alikes and crowding</td></tr>
@@ -56,17 +54,16 @@
 <tr><td><code>qa</code>, <code>scorers</code>, <code>workload</code>, <code>llm</code></td><td>Answerers, scorers, workload files, the language-model translator</td></tr>
 <tr><td><code>objects</code>, <code>records</code>, <code>profiles</code>, <code>costs</code></td><td>Content-addressed store, runs, impact profiles, the model-call ledger</td></tr>
 <tr><td><code>memory</code></td><td>Attacks and defenses on an agent memory store</td></tr>
-</table>
+</tbody></table>
 
 <h2 id="extend">Extension points</h2>
-<table>
-<tr><th>To add</th><th>Implement</th><th>Register in</th></tr>
+<table><thead><tr><th scope="col">To add</th><th scope="col">Implement</th><th scope="col">Register in</th></tr></thead><tbody>
 <tr><td>A scorer</td><td>A callable <code>ontology -&gt; float</code></td><td><code>SCORERS</code></td></tr>
 <tr><td>A storage backend</td><td><code>StateBackend</code>: <code>base</code>, <code>save_base</code>, <code>append</code>, <code>rollback</code>, <code>records</code></td><td><code>BACKENDS</code></td></tr>
 <tr><td>A primitive action</td><td><code>ActionKind</code>: <code>apply</code> and <code>touched</code></td><td><code>ACTION_KINDS</code></td></tr>
 <tr><td>A health check</td><td>A function <code>ontology -&gt; bool</code></td><td>A <code>HealthMonitor</code></td></tr>
 <tr><td>An attack search</td><td>A function <code>(harm, ontology, units, budget, ...) -&gt; ScoredChain</code></td><td>Pass it as the attacker to <code>lock_best_response</code></td></tr>
-</table>
+</tbody></table>
 <nav class="pager" aria-label="Pages"><a class="prev" href="leaderboard.html"><span>Previous</span>Leaderboard</a><span></span></nav>
 </main>
 </div>

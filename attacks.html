@@ -15,7 +15,7 @@
 <a class="skip" href="#content">Skip to content</a>
 <header class="site">
   <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
-  <nav class="site">
+  <nav class="site" aria-label="Site">
     <a href="getting-started.html">Start</a>
     <a href="attacks.html">Attacks</a>
     <a href="reference.html">Reference</a>
@@ -25,34 +25,32 @@
 </header>
 <input id="nav-toggle" class="nav-toggle" type="checkbox">
 <div class="layout">
-<nav class="nav">
+<nav class="nav" aria-label="Manual pages">
 <a class="brand-desk" href="index.html">Aegis Manual</a><input class="search" id="q" type="search" placeholder="Search the manual" autocomplete="off"><ul id="results" hidden></ul><a href="index.html">Overview</a><a href="getting-started.html">Getting started</a><a href="concepts.html">Concepts</a><a href="attacks.html" aria-current="page">Attack search</a><a href="protection.html">Protection</a><a href="recovery.html">Recovery</a><a href="experiments.html">Experiments</a><a href="leaderboard.html">Leaderboard</a><a href="reference.html">Reference</a>
 </nav>
 <main id="content">
 <p class="kicker">Attacker</p>
 <h1>Attack search</h1>
 <p class="lede">An attack is a chain of at most k edits. The search space is a tree, harm over it is not submodular, and Aegis searches it with a bandit at every node.</p>
-<nav class="toc"><strong>On this page</strong><ol><li><a href="#operators">Operators and units</a></li><li><a href="#feasible">Feasible chains</a></li><li><a href="#knowledge">What the attacker knows</a></li><li><a href="#nonsub">Why greedy is not enough</a></li><li><a href="#uct">UCT: a bandit at every node</a></li></ol></nav>
+<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol><li><a href="#operators">Operators and units</a></li><li><a href="#feasible">Feasible chains</a></li><li><a href="#knowledge">What the attacker knows</a></li><li><a href="#nonsub">Why greedy is not enough</a></li><li><a href="#uct">UCT: a bandit at every node</a></li></ol></nav>
 <h2 id="operators">Operators and units</h2>
-<table>
-<tr><th>Primitive</th><th>Effect</th></tr>
+<table><thead><tr><th scope="col">Primitive</th><th scope="col">Effect</th></tr></thead><tbody>
 <tr><td><code>remove_concept(c)</code></td><td>Remove a class and every triple touching it</td></tr>
 <tr><td><code>remove_relation(s, p, o)</code></td><td>Remove one triple</td></tr>
 <tr><td><code>inject_concept(c)</code></td><td>Add a class</td></tr>
 <tr><td><code>inject_relation(s, p, o)</code></td><td>Add a triple between existing classes</td></tr>
-</table>
+</tbody></table>
 <p>Attackers use primitives in units: a <strong>removal</strong>; a <strong>rewire</strong> (remove <code>A ⊑ B</code>, inject <code>A ⊑ B'</code>); a <strong>flood</strong> (inject look-alikes such as <code>Metall</code> and attach them). <code>candidate_units</code> builds removal and rewire units over the elements with the largest impact, and flood units with <code>flood=n</code>; rewires that would close a cycle are left out.</p>
 
 <h2 id="feasible">Feasible chains</h2>
 <p>A chain is feasible under budget <code>k</code> when each action applies in the state the earlier ones left, its cost is at most <code>k</code>, it changes at least one triple, and its harm is positive. Problem 1 is to find the feasible chain of largest harm. The cheapest chain whose harm reaches a threshold gives a workload's <em>robustness radius</em>: the fewest edits that make the agent answer wrongly.</p>
 
 <h2 id="knowledge">What the attacker knows</h2>
-<table>
-<tr><th>Attacker</th><th>Knows</th><th>An evaluation of harm is</th></tr>
+<table><thead><tr><th scope="col">Attacker</th><th scope="col">Knows</th><th scope="col">An evaluation of harm is</th></tr></thead><tbody>
 <tr><td>White box</td><td>Ontology, workload, gold answers</td><td>Exact and cheap</td></tr>
 <tr><td>Gray box</td><td>Ontology, workload, an impact ranking</td><td>Exact, guided by the ranking</td></tr>
 <tr><td>Black box</td><td>Only the agent's answers</td><td>A costly, noisy agent call</td></tr>
-</table>
+</tbody></table>
 <p>In every case the scarce resource is harm evaluations, so Aegis compares searches at equal evaluation counts. Every search returns a <code>ScoredChain</code> with its <code>harm</code> and <code>evaluations</code>; states are cached by digest, so two orders that reach the same state cost one evaluation.</p>
 
 <h2 id="nonsub">Why greedy is not enough</h2>
@@ -74,13 +72,12 @@ units = candidate_units(onto, concept_deltas, relation_deltas, top=8)
 best = beam(harm, onto, units, budget=3, width=3, k=1)[0]
 found = uct(harm, onto, units, budget=3, evaluations=best.evaluations)   # same cost as beam
 print(found.harm, [str(a) for a in found.chain])</code></pre>
-<table>
-<tr><th>Search</th><th>Use</th></tr>
+<table><thead><tr><th scope="col">Search</th><th scope="col">Use</th></tr></thead><tbody>
 <tr><td><code>greedy</code></td><td>Baseline: the unit that raises harm most, until none does</td></tr>
 <tr><td><code>beam(width, k)</code></td><td>The <code>k</code> most harmful distinct chains, keeping <code>width</code> partial chains per step</td></tr>
 <tr><td><code>random_chains(evaluations, seed)</code></td><td>The floor: random chains until the budget is spent</td></tr>
 <tr><td><code>uct(evaluations, c, widening, seed)</code></td><td>Bandit tree search; defaults <code>c = 0.5</code>, <code>widening = 0.5</code></td></tr>
-</table>
+</tbody></table>
 <div class="callout next"><strong>Planned.</strong> Against a black-box agent, harm is a sampled estimate. The search will end with best-arm identification among its top chains, which returns a chain within ε of the most harmful with probability 1 − δ.</div>
 <nav class="pager" aria-label="Pages"><a class="prev" href="concepts.html"><span>Previous</span>Concepts</a><a class="next" href="protection.html"><span>Next</span>Protection</a></nav>
 </main>

@@ -15,7 +15,7 @@
 <a class="skip" href="#content">Skip to content</a>
 <header class="site">
   <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
-  <nav class="site">
+  <nav class="site" aria-label="Site">
     <a href="getting-started.html">Start</a>
     <a href="attacks.html">Attacks</a>
     <a href="reference.html">Reference</a>
@@ -25,14 +25,14 @@
 </header>
 <input id="nav-toggle" class="nav-toggle" type="checkbox">
 <div class="layout">
-<nav class="nav">
+<nav class="nav" aria-label="Manual pages">
 <a class="brand-desk" href="index.html">Aegis Manual</a><input class="search" id="q" type="search" placeholder="Search the manual" autocomplete="off"><ul id="results" hidden></ul><a href="index.html">Overview</a><a href="getting-started.html">Getting started</a><a href="concepts.html">Concepts</a><a href="attacks.html">Attack search</a><a href="protection.html">Protection</a><a href="recovery.html" aria-current="page">Recovery</a><a href="experiments.html">Experiments</a><a href="leaderboard.html">Leaderboard</a><a href="reference.html">Reference</a>
 </nav>
 <main id="content">
 <p class="kicker">Substrate</p>
 <h1>Recovery</h1>
 <p class="lede">Aegis treats the ontology like a database treats its data: every edit is a logged transaction with its undo, checked on commit, and reversible.</p>
-<nav class="toc"><strong>On this page</strong><ol><li><a href="#transactions">Transactions and the log</a></li><li><a href="#backends">Storage backends</a></li><li><a href="#hygiene">Health checks and constraints</a></li><li><a href="#detection">Detection</a></li><li><a href="#repair">Decisions and repair</a></li><li><a href="#memory">Agent memory</a></li></ol></nav>
+<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol><li><a href="#transactions">Transactions and the log</a></li><li><a href="#backends">Storage backends</a></li><li><a href="#hygiene">Health checks and constraints</a></li><li><a href="#detection">Detection</a></li><li><a href="#repair">Decisions and repair</a></li><li><a href="#memory">Agent memory</a></li></ol></nav>
 <h2 id="transactions">Transactions and the log</h2>
 <p><code>VersionedOntology</code> applies each action atomically with its undo actions; <code>apply_chain</code> is all or nothing. Every commit records digests of the state before and after, so any state can be rebuilt (<code>forensics.state_at</code>) and rollback checks it restored the exact prior state.</p>
 <pre><code>v = VersionedOntology(onto)
@@ -42,12 +42,11 @@ v.apply_chain([remove_relation("Alloy", "subClassOf", "Metal"),
 v.rollback_to(1)</code></pre>
 
 <h2 id="backends">Storage backends</h2>
-<table>
-<tr><th>Backend</th><th>Stores</th><th>Rollback</th></tr>
+<table><thead><tr><th scope="col">Backend</th><th scope="col">Stores</th><th scope="col">Rollback</th></tr></thead><tbody>
 <tr><td><code>MemoryBackend()</code></td><td>Python lists</td><td>Truncates the log</td></tr>
 <tr><td><code>JsonlBackend(dir)</code></td><td><code>base.json</code> and <code>log.jsonl</code></td><td>Truncates the log</td></tr>
 <tr><td><code>OntoDBBackend(dir, binary=...)</code></td><td>Transactions on an RDF database, read back with SPARQL</td><td>Compensating transactions in the database's write-ahead log</td></tr>
-</table>
+</tbody></table>
 <p><code>migrate(src, dst)</code> replays one backend's history into another.</p>
 
 <h2 id="hygiene">Health checks and constraints</h2>

@@ -15,7 +15,7 @@
 <a class="skip" href="#content">Skip to content</a>
 <header class="site">
   <a class="logo" href="index.html"><span class="logo-mark">A</span><span>Aegis</span></a>
-  <nav class="site">
+  <nav class="site" aria-label="Site">
     <a href="getting-started.html">Start</a>
     <a href="attacks.html">Attacks</a>
     <a href="reference.html">Reference</a>
@@ -25,46 +25,43 @@
 </header>
 <input id="nav-toggle" class="nav-toggle" type="checkbox">
 <div class="layout">
-<nav class="nav">
+<nav class="nav" aria-label="Manual pages">
 <a class="brand-desk" href="index.html">Aegis Manual</a><input class="search" id="q" type="search" placeholder="Search the manual" autocomplete="off"><ul id="results" hidden></ul><a href="index.html">Overview</a><a href="getting-started.html">Getting started</a><a href="concepts.html">Concepts</a><a href="attacks.html">Attack search</a><a href="protection.html">Protection</a><a href="recovery.html">Recovery</a><a href="experiments.html" aria-current="page">Experiments</a><a href="leaderboard.html">Leaderboard</a><a href="reference.html">Reference</a>
 </nav>
 <main id="content">
 <p class="kicker">Results</p>
 <h1>Experiments</h1>
 <p class="lede">Each experiment is a script in experiments/ that writes a dated result file; the README and the white paper read from those files.</p>
-<nav class="toc"><strong>On this page</strong><ol><li><a href="#list">Experiments</a></li><li><a href="#attack">Attack search at equal cost</a></li><li><a href="#protection">Protection by locking</a></li><li><a href="#agent">A language-model agent</a></li><li><a href="#memory">Agent memory</a></li></ol></nav>
+<nav class="toc" aria-label="On this page"><strong>On this page</strong><ol><li><a href="#list">Experiments</a></li><li><a href="#attack">Attack search at equal cost</a></li><li><a href="#protection">Protection by locking</a></li><li><a href="#agent">A language-model agent</a></li><li><a href="#memory">Agent memory</a></li></ol></nav>
 <h2 id="list">Experiments</h2>
-<table>
-<tr><th>Script</th><th>Measures</th><th>Model calls</th></tr>
+<table><thead><tr><th scope="col">Script</th><th scope="col">Measures</th><th scope="col">Model calls</th></tr></thead><tbody>
 <tr><td><code>real_ontologies/run.py</code></td><td>Impact by group testing, the worst two-action chain, detection, inferred amplification</td><td>None</td></tr>
 <tr><td><code>attack_defense/run.py</code></td><td>Greedy, beam, random, and UCT at equal evaluations; residual harm under M locks</td><td>None</td></tr>
 <tr><td><code>llm_agent/run.py</code></td><td>A language-model agent answering the same workloads in words, honest and attacked</td><td>20 requests, $0.68</td></tr>
 <tr><td><code>memory_defense/run.py</code></td><td>Random attacks on a shared agent memory; repair by attribution against rollback</td><td>None</td></tr>
-</table>
+</tbody></table>
 <p>Every model call is recorded in <code>results/costs/ledger.jsonl</code> with tokens, seconds, and list-price dollars.</p>
 
 <h2 id="attack">Attack search at equal cost</h2>
 <pre><code>uv run python experiments/attack_defense/run.py --json results/attack_defense/2026-10-18.json
 uv run --with matplotlib python paper/figures.py results/attack_defense/2026-10-18.json</code></pre>
 <p>At equal harm evaluations (beam's count), the most harmful three-action chain each search finds; random and UCT are means of 5 seeds.</p>
-<table>
-<tr><th>Ontology</th><th>Greedy</th><th>Beam</th><th>Random</th><th>UCT</th><th>Evaluations</th></tr>
+<table><thead><tr><th scope="col">Ontology</th><th scope="col">Greedy</th><th scope="col">Beam</th><th scope="col">Random</th><th scope="col">UCT</th><th scope="col">Evaluations</th></tr></thead><tbody>
 <tr><td>EBSD</td><td>0.600</td><td>0.600</td><td>0.533</td><td>0.493</td><td>167</td></tr>
 <tr><td>MatProc</td><td>0.619</td><td>1.000</td><td>0.776</td><td>0.805</td><td>119</td></tr>
 <tr><td>XRD</td><td>0.444</td><td>0.444</td><td>0.533</td><td>0.600</td><td>91</td></tr>
 <tr><td>Mouse anatomy</td><td>0.803</td><td>0.945</td><td>0.809</td><td>0.884</td><td>104</td></tr>
-</table>
+</tbody></table>
 <p>UCT beats greedy and beam on XRD at every budget from two actions up (0.763 against 0.644 at four), ties beam at two actions elsewhere, and trails it at three and four where harm is close to additive. Given 200 evaluations it reaches 1.000 on MatProc and 0.945 on mouse anatomy with no spread across seeds; random search still varies by 0.04 to 0.12.</p>
 
 <h2 id="protection">Protection by locking</h2>
 <p>Residual harm of a two-action attacker (the best of beam and UCT) after locking six triples:</p>
-<table>
-<tr><th>Ontology</th><th>No locks</th><th>Random</th><th>Top impact</th><th>Best response</th></tr>
+<table><thead><tr><th scope="col">Ontology</th><th scope="col">No locks</th><th scope="col">Random</th><th scope="col">Top impact</th><th scope="col">Best response</th></tr></thead><tbody>
 <tr><td>EBSD</td><td>0.400</td><td>0.320</td><td>0.400</td><td>0.133</td></tr>
 <tr><td>MatProc</td><td>0.800</td><td>0.459</td><td>0.025</td><td>0.025</td></tr>
 <tr><td>XRD</td><td>0.400</td><td>0.400</td><td>0.212</td><td>0.030</td></tr>
 <tr><td>Mouse anatomy</td><td>0.745</td><td>0.675</td><td>0.029</td><td>0.019</td></tr>
-</table>
+</tbody></table>
 <p>Best response is never worse than top impact. On EBSD, six top-impact locks change nothing because the attacker moves to the next query's triples. Ten well-chosen locks remove all of a two-action attacker's harm on every ontology.</p>
 
 <h2 id="agent">A language-model agent</h2>
