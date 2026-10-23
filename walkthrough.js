@@ -355,6 +355,7 @@ const MARKUP = `
       </div></div>
   </div>
   <div class="legend-art"><span style="--c:var(--s-seed)"><i></i>seed of a question</span><span style="--c:var(--s-hit)"><i></i>correct answer</span><span style="--c:var(--s-bad)"><i></i>missing or injected</span><span style="--c:var(--s-spur)"><i></i>wrong answer</span><span style="--c:var(--s-gold)"><i></i>locked or chosen</span></div>
+  <ol class="phases" id="wt-phases" aria-label="Stage"></ol>
   <div class="caption" id="wt-caption" aria-live="polite"></div>
 </div>
 <div class="transport">
@@ -369,6 +370,13 @@ const MARKUP = `
 </div>
 `;
 const acts = [areaAct(), greedyAct(), uctAct(), lockAct()];
+// The stages of each part, and which step tags belong to which stage.
+const PHASES = [
+  [["Workload", "workload"], ["Reach", "reach"], ["Remove a concept", "scan concept"], ["Cut a relation", "scan relation"], ["Affected area", "affected area"]],
+  [["Try every unit", "greedy · try all"], ["Keep the best", "greedy · keep best"], ["Stop", "greedy · stop", "greedy · result"]],
+  [["Select", "1 ·"], ["Expand", "2 ·"], ["Roll out", "3 ·"], ["Backpropagate", "4 ·"], ["Result", "bandit"]],
+  [["No locks", "no locks"], ["Best attack", "attacker"], ["Try each lock", "candidate"], ["Lock it", "lock"], ["Result", "result"]],
+];
 root.className = "walk";
 root.innerHTML = MARKUP;
 const drawGraph = makeGraph($("#wt-graph")), drawTree = makeTree($("#wt-tree"));
@@ -395,6 +403,8 @@ function paint() {
   $("#wt-code").replaceChildren(...act.code.map((l, j) => h("span", { class: "ln" + (step.line.includes(j) ? " on" : "") }, l || " ", j === lastOn ? h("em", { class: "res" }, res) : null)));
   $("#wt-vars").replaceChildren(...step.vars.map(([k, v]) => h("div", {}, h("span", {}, k), h("code", {}, String(v)))));
   }
+  const at = PHASES[st.a].findIndex(([, ...tags]) => tags.some((t) => step.tag.startsWith(t)));
+  $("#wt-phases").replaceChildren(...PHASES[st.a].map(([name], j) => h("li", { class: j === at ? "on" : j < at ? "past" : "" }, name)));
   const sl = $("#wt-scrub"); sl.max = act.steps.length - 1; sl.value = st.i;
   $("#wt-count").textContent = `step ${st.i + 1} of ${act.steps.length}`;
   $("#wt-prev").disabled = st.i === 0; $("#wt-next").disabled = st.i === act.steps.length - 1;

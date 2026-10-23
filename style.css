@@ -415,3 +415,8 @@ pre.pseudo span.ln .res { display: block; font-style: normal; color: #15803d; fo
 .walk .transport label { display: inline-flex; align-items: center; gap: 8px; color: var(--subtle); font-size: 14px; }
 .walk .panel-lite { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; min-width: 0; }
 .walk .panel-lite h3 { font-size: 15px; font-weight: 500; margin: 0 0 10px; }
+.phases { position: relative; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0 14px 10px; counter-reset: ph; }
+.phases li { counter-increment: ph; font-size: 13px; padding: 3px 12px 3px 8px; border-radius: 999px; border: 1px solid var(--s-line); background: var(--s-surface); color: var(--s-dim); display: inline-flex; align-items: center; gap: 7px; transition: background .25s, color .25s, border-color .25s; }
+.phases li::before { content: counter(ph); display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--s-track); color: var(--s-dim); font-size: 11px; font-weight: 600; }
+.phases li.past { color: var(--s-fg); } .phases li.past::before { background: var(--s-hit-t); color: var(--s-hit); }
+.phases li.on { border-color: var(--s-bad); background: var(--s-bad-t); color: var(--s-bad); font-weight: 600; } .phases li.on::before { background: var(--s-bad); color: #fff; }
