@@ -372,23 +372,50 @@ main:has(#walk) { max-width: none; }
 .p-note { padding: 6px 10px 10px; font-size: 12.5px; color: var(--s-dim); }
 
 /* tree */
-.t-edge { fill: none; stroke: var(--s-edge); stroke-linecap: round; transition: d .5s, stroke .4s, stroke-width .4s, opacity .4s; }
-.t-edge.sel { stroke: var(--s-bad); }
+.cell-tree { grid-column: 1 / -1; }
+.cell-tree[hidden] { display: none; }
+.t-edge { fill: none; stroke: var(--s-edge); stroke-linecap: round; opacity: .8; transition: stroke .4s, stroke-width .4s, opacity .4s; }
+.t-edge.best { stroke: var(--s-gold); opacity: 1; }
+.t-edge.sel { stroke: var(--s-bad); opacity: 1; }
 .t-node { transition: transform .55s cubic-bezier(.3, .8, .3, 1), opacity .4s; }
-.t-node circle { transition: r .4s, fill .4s, stroke .4s; stroke: var(--s-surface); stroke-width: 2; }
-.t-node.sel circle { stroke: var(--s-bad); stroke-width: 2.8; }
-.t-node.fresh circle { stroke: var(--s-hit); stroke-width: 3; animation: pulse 1s ease-out; }
-.t-node.done circle { opacity: .55; }
-.t-node text { font-size: 13px; fill: var(--s-dim); transition: fill .3s; dominant-baseline: central; }
-.t-node.sel text, .t-node.fresh text { fill: var(--s-fg); font-weight: 600; }
-.t-node text.n { font-size: 12px; fill: #fff; text-anchor: middle; font-weight: 600; pointer-events: none; }
+.t-card { fill: var(--s-surface); stroke: var(--s-line); stroke-width: 1.4; transition: stroke .3s, fill .3s; }
+.t-node.d0 .t-card { fill: var(--s-seed-t); stroke: var(--s-seed); }
+.t-node.best .t-card { stroke: var(--s-gold); stroke-width: 2.2; }
+.t-node.sel .t-card { stroke: var(--s-bad); stroke-width: 2.6; fill: var(--s-bad-t); }
+.t-node.fresh .t-card { stroke: var(--s-hit); stroke-width: 2.6; fill: var(--s-hit-t); animation: pulse 1s ease-out; }
+.t-node.done { opacity: .6; }
+.t-l1, .t-l2 { font-size: 14.5px; font-weight: 600; text-anchor: middle; }
+.stage svg text.t-l2 { font-weight: 500; fill: var(--s-dim); }
+.stage svg text.t-stat { font-size: 12.5px; text-anchor: middle; fill: var(--s-dim); font-variant-numeric: tabular-nums; }
+.t-track { fill: var(--s-track); }
+.t-bar { transition: width .4s, fill .4s; }
+.stage svg text.t-star { font-size: 15px; text-anchor: middle; fill: var(--s-gold); opacity: 0; transition: opacity .3s; }
+.t-node.best .t-star { opacity: 1; }
+.t-node circle { stroke: var(--s-surface); stroke-width: 2; transition: r .4s, fill .4s, stroke .3s; }
+.t-node.d2.best circle { stroke: var(--s-gold); stroke-width: 3; }
+.t-node.d2.sel circle { stroke: var(--s-bad); stroke-width: 3; }
+.t-node.d2.fresh circle { stroke: var(--s-hit); stroke-width: 3; animation: pulse 1s ease-out; }
+.t-dlabel { font-size: 14px; font-weight: 600; }
 .t-roll { fill: none; stroke: var(--s-spur); stroke-width: 2; stroke-dasharray: 4 5; animation: dash 1s linear infinite; }
 .t-ghost { fill: var(--s-spur); }
 @keyframes dash { to { stroke-dashoffset: -18; } }
 @keyframes pulse { 0% { filter: drop-shadow(0 0 0 var(--s-hit)); } 40% { filter: drop-shadow(0 0 7px var(--s-hit)); } 100% { filter: none; } }
-.t-ucb { font-size: 13px; fill: var(--s-bad); font-weight: 600; paint-order: stroke; stroke: var(--s-bg); stroke-width: 3px; }
-.t-hud { font-size: 13px; fill: var(--s-dim); }
-.t-harm { font-size: 13px; font-weight: 600; fill: var(--s-spur); }
+.stage svg text.t-ucb { font-size: 14px; fill: var(--s-bad); font-weight: 700; paint-order: stroke; stroke: var(--s-bg); stroke-width: 4px; }
+.stage svg text.t-hud { font-size: 14px; fill: var(--s-dim); }
+.stage svg text.t-harm { font-size: 14px; font-weight: 600; fill: var(--s-spur); }
+
+/* the root's arms */
+.arms { display: grid; gap: 7px; padding: 8px 8px 2px; }
+.arm { display: grid; grid-template-columns: minmax(7em, 13em) 1fr auto 4.6em; gap: 10px; align-items: center; font-size: 12.5px; color: var(--s-dim); padding: 3px 6px; border-radius: 8px; border: 1px solid transparent; transition: background .25s, border-color .25s; }
+.arm-name { color: var(--s-fg); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arm-bar { display: flex; height: 12px; border-radius: 6px; background: var(--s-track); overflow: hidden; }
+.arm-bar b { display: block; height: 100%; transition: width .45s; }
+.arm-bonus { background: repeating-linear-gradient(135deg, var(--s-seed) 0 3px, transparent 3px 6px); opacity: .55; }
+.arm-val { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--s-fg); }
+.arm-n { text-align: right; font-variant-numeric: tabular-nums; }
+.arm.chosen { border-color: var(--s-bad); background: var(--s-bad-t); }
+.arm.chosen .arm-name::before { content: "▸ "; color: var(--s-bad); }
+.arm.done { opacity: .55; } .arm.new .arm-val { color: var(--s-hit); font-weight: 600; }
 
 /* transport and code */
 .transport { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin: 14px 0 10px; }
@@ -425,3 +452,5 @@ pre.pseudo span.ln .res { display: block; font-style: normal; color: #15803d; fo
 .aff-q { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; color: var(--s-fg); font-weight: 600; }
 .aff i { font-style: normal; font-weight: 500; font-size: 12px; padding: 0 7px; border-radius: 999px; }
 .aff i.rm { background: var(--s-bad-t); color: var(--s-bad); } .aff i.add { background: var(--s-spur-t); color: var(--s-spur); }
+.cell-tree #wt-tree { overflow-x: auto; }
+.cell-tree #wt-tree svg { min-width: 760px; }

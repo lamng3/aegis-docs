@@ -125,76 +125,123 @@ function makeGraph(el) {
 // ---------- the search tree ----------
 const heat = (t) => `color-mix(in srgb, var(--s-bad) ${Math.round(Math.min(1, Math.max(0, t)) * 100)}%, var(--s-low))`;
 function makeTree(el) {
-  const svg = S("svg", { viewBox: "0 0 640 392", role: "img", "aria-label": "The search tree" });
+  // Top-down: the root card, a row of cards for the chains of one unit (the root's arms), and dots for the chains
+  // that extend them. Cards are keyed by chain, so they glide to their new places as the tree grows.
+  const TW = 1100, ROOT_Y = 38, D1_Y = 156, D2_Y = 268, ROLL_Y = 326, CH = 78;
+  const svg = S("svg", { viewBox: `0 0 ${TW} 352`, role: "img", "aria-label": "The search tree" });
   const edgeLayer = S("g"), nodeLayer = S("g"), over = S("g");
   svg.append(edgeLayer, nodeLayer, over);
   el.replaceChildren(svg);
   const nodes = new Map(), edges = new Map();
+  const cardLines = (unit) => {
+    const acts = unit.split(" ; ").map((a) => a.replace(/^remove /, "− ").replace(/^add /, "+ "));
+    if (acts.length > 1) return acts.map((a) => short(a, 24));
+    const [a] = acts;
+    if (a.length <= 20 || !a.includes(" ⊑ ")) return [short(a, 24)];
+    const [s, o] = a.split(" ⊑ ");
+    return [s, "⊑ " + o];
+  };
+  const mean = (n) => (n.visits ? n.total / n.visits : n.harm);
   return (tree, o) => {
-    // flatten and lay out: x by depth, y by leaf order
-    const flat = [];
-    let leaf = 0;
-    const walk = (n, depth, parent) => {
-      const f = { n, depth, parent, id: parent === null ? "root" : n.label, y: 0, hidden: 0 };
-      flat.push(f);
-      let shown = n.children;
-      if (depth >= 1 && shown.length > 2) {
-        const must = (c) => o.sel.includes(c.label) || o.fresh === c.label;
-        const top = [...shown].sort((a, b) => b.visits - a.visits || b.harm - a.harm).slice(0, 2);
-        shown = shown.filter((c) => top.includes(c) || must(c));
-        f.hidden = n.children.length - shown.length;
-      }
-      const kids = shown.map((c) => walk(c, depth + 1, f.id));
-      f.y = kids.length ? (kids[0].y + kids[kids.length - 1].y) / 2 : leaf++;
-      return f;
-    };
-    walk(tree, 0, null);
-    const space = Math.min(34, 330 / Math.max(leaf, 1)), top = 196 - ((leaf - 1) * space) / 2;
-    const pos = new Map(flat.map((f) => [f.id, [46 + f.depth * 200, top + f.y * space]]));
-    const radius = (n) => Math.min(21, 7 + 3.4 * Math.sqrt(n.visits));
+    const kids = tree.children, k = Math.max(kids.length, 1);
+    const cw = Math.min(158, (TW - 24) / k - 12), place = new Map([["root", { x: TW / 2, y: ROOT_Y, depth: 0, n: tree }]]);
+    kids.forEach((c, i) => {
+      const x = TW / 2 + (i - (kids.length - 1) / 2) * (cw + 12);
+      place.set(c.label, { x, y: D1_Y, depth: 1, n: c, parent: "root" });
+      const gap = Math.min(26, (cw - 10) / Math.max(c.children.length, 1));
+      c.children.forEach((g, j) => place.set(g.label, { x: x + (j - (c.children.length - 1) / 2) * gap, y: D2_Y, depth: 2, n: g, parent: c.label }));
+    });
+    const onBest = (id) => o.best && (o.best === id || o.best.startsWith(id + " ; "));
     const seen = new Set();
-    for (const f of flat) {
-      seen.add(f.id);
-      const [x, y] = pos.get(f.id), n = f.n, sel = o.sel.includes(f.id), fresh = o.fresh === f.id;
-      let nd = nodes.get(f.id);
+    for (const [id, p] of place) {
+      seen.add(id);
+      const n = p.n, sel = o.sel.includes(id), fresh = o.fresh === id, best = id !== "root" && onBest(id);
+      let nd = nodes.get(id);
       if (!nd) {
-        const c = S("circle", { r: 4 }), t = S("text", { x: 0, y: 0 }), cnt = S("text", { class: "n" });
-        const g = S("g", { class: "t-node", style: `transform:translate(${x}px,${y}px)` }, S("title", {}, f.id), c, t, cnt);
+        const g = S("g", { class: "t-node", style: `transform:translate(${p.x}px,${p.y}px)` }, S("title", {}, id === "root" ? "no edits yet" : id));
+        if (p.depth === 2) {
+          nd = { g, dot: S("circle", { r: 6 }), label: S("text", { class: "t-dlabel", y: 26, "text-anchor": "middle" }) };
+          g.append(nd.dot, nd.label);
+        } else {
+          const w = p.depth === 0 ? 176 : cw, h = p.depth === 0 ? 50 : CH;
+          nd = { g, box: S("rect", { class: "t-card", rx: 10 }), lines: [S("text", { class: "t-l1" }), S("text", { class: "t-l2" })], stat: S("text", { class: "t-stat" }),
+            track: S("rect", { class: "t-track", rx: 2, height: 4 }), bar: S("rect", { class: "t-bar", rx: 2, height: 4 }), star: S("text", { class: "t-star" }, "★"), w, h };
+          g.append(nd.box, ...nd.lines, nd.stat, nd.track, nd.bar, nd.star);
+        }
         nodeLayer.append(g);
-        nd = { g, c, t, cnt };
-        nodes.set(f.id, nd);
+        nodes.set(id, nd);
       }
-      nd.g.style.transform = `translate(${x}px,${y}px)`;
-      nd.g.style.opacity = 1;
-      nd.g.setAttribute("class", `t-node${sel ? " sel" : ""}${fresh ? " fresh" : ""}${n.done ? " done" : ""}`);
-      const r = f.parent === null ? 11 : radius(n);
-      nd.c.setAttribute("r", r);
-      nd.c.style.fill = f.parent === null ? "var(--s-seed)" : heat(n.visits ? n.total / n.visits : n.harm);
-      nd.t.textContent = f.parent === null ? "" : short(lastUnit(f.parent, f.id), f.hidden ? 20 : 34) + (f.hidden ? `   (+${f.hidden} more)` : "");
-      nd.t.setAttribute("x", r + 6);
-      nd.cnt.textContent = f.parent !== null && r >= 12 ? n.visits : "";
-      if (f.parent !== null) {
-        let ed = edges.get(f.id);
-        if (!ed) { ed = S("path", { class: "t-edge" }); edgeLayer.append(ed); edges.set(f.id, ed); }
-        const [px, py] = pos.get(f.parent), mx = (px + x) / 2;
-        ed.setAttribute("d", `M${px} ${py} C${mx} ${py} ${mx} ${y} ${x} ${y}`);
-        ed.setAttribute("class", "t-edge" + (sel ? " sel" : ""));
-        ed.style.strokeWidth = 1.2 + Math.min(5, Math.sqrt(n.visits) * 1.2);
+      nd.g.style.transform = `translate(${p.x}px,${p.y}px)`;
+      nd.g.setAttribute("class", `t-node d${p.depth}${sel ? " sel" : ""}${fresh ? " fresh" : ""}${best ? " best" : ""}${n.done ? " done" : ""}`);
+      if (p.depth === 2) {
+        nd.dot.setAttribute("r", Math.min(11, 5 + 2 * Math.sqrt(n.visits)));
+        nd.dot.style.fill = heat(mean(n));
+        const show = sel || fresh || (best && o.best === id);
+        nd.label.textContent = show ? short(lastUnit(p.parent, id), 26) + (n.visits ? "" : `  ·  harm ${f2(n.harm)}`) : "";
+        const lx = Math.max(90 - p.x, Math.min(TW - 90 - p.x, 0));
+        nd.label.setAttribute("x", lx);
+      } else {
+        const w = p.depth === 0 ? 176 : cw, h = nd.h;
+        nd.w = w;
+        nd.box.setAttribute("x", -w / 2); nd.box.setAttribute("y", -h / 2); nd.box.setAttribute("width", w); nd.box.setAttribute("height", h);
+        const lines = p.depth === 0 ? ["start: no edits"] : cardLines(lastUnit("root", id));
+        nd.lines.forEach((t, j) => { t.textContent = lines[j] || ""; t.setAttribute("x", 0); t.setAttribute("y", (p.depth === 0 ? -6 : -h / 2 + 20) + j * 17); });
+        nd.stat.textContent = n.visits ? `n ${n.visits}   mean ${f2(mean(n))}` : p.depth === 0 ? "" : `new · harm ${f2(n.harm)}`;
+        nd.stat.setAttribute("x", 0); nd.stat.setAttribute("y", p.depth === 0 ? 13 : h / 2 - 15);
+        if (p.depth === 0) nd.stat.textContent = `${n.visits} visits`;
+        const bw = w - 24;
+        nd.track.setAttribute("x", -bw / 2); nd.track.setAttribute("y", h / 2 - 9); nd.track.setAttribute("width", p.depth ? bw : 0);
+        nd.bar.setAttribute("x", -bw / 2); nd.bar.setAttribute("y", h / 2 - 9); nd.bar.setAttribute("width", p.depth ? Math.max(2, bw * Math.min(1, mean(n))) : 0);
+        nd.bar.style.fill = heat(mean(n));
+        nd.star.setAttribute("x", w / 2 - 14); nd.star.setAttribute("y", -h / 2 + 15);
+      }
+      if (p.parent) {
+        let ed = edges.get(id);
+        if (!ed) { ed = S("path", { class: "t-edge" }); edgeLayer.append(ed); edges.set(id, ed); }
+        const q = place.get(p.parent), y0 = q.y + (q.depth === 0 ? 25 : CH / 2), y1 = p.y - (p.depth === 1 ? CH / 2 : 8), my = (y0 + y1) / 2;
+        ed.setAttribute("d", `M${q.x} ${y0} C${q.x} ${my} ${p.x} ${my} ${p.x} ${y1}`);
+        ed.setAttribute("class", "t-edge" + (sel ? " sel" : "") + (best ? " best" : ""));
+        ed.style.strokeWidth = 1.2 + Math.min(6, Math.sqrt(n.visits) * 1.3);
       }
     }
     for (const [id, nd] of nodes) if (!seen.has(id)) { nd.g.remove(); nodes.delete(id); edges.get(id)?.remove(); edges.delete(id); }
     over.replaceChildren();
     for (const [id, u] of Object.entries(o.ucb || {})) {
-      const p = pos.get(id);
-      if (p) over.append(S("text", { class: "t-ucb", x: p[0] - 4, y: p[1] - 15, "text-anchor": "start" }, "UCB " + u));
+      const p = place.get(id);
+      if (p) over.append(S("text", { class: "t-ucb", x: p.x, y: p.y - (p.depth === 1 ? CH / 2 + 7 : 14), "text-anchor": "middle" }, "UCB " + u));
     }
-    if (o.roll && pos.get(o.roll.from)) {
-      const [x, y] = pos.get(o.roll.from), x2 = Math.min(x + 150, 600), y2 = y + 34;
-      over.append(S("path", { class: "t-roll", d: `M${x} ${y} C${x + 60} ${y} ${x2 - 60} ${y2} ${x2} ${y2}` }),
-        S("path", { class: "t-ghost", d: `M${x2} ${y2 - 7} l7 7 l-7 7 l-7 -7 z` }), S("text", { class: "t-harm", x: x2 + 11, y: y2 + 4 }, "harm " + f2(o.roll.harm)));
+    if (o.roll && place.get(o.roll.from)) {
+      const p = place.get(o.roll.from), y0 = p.y + (p.depth === 1 ? CH / 2 : 10), x2 = Math.min(Math.max(p.x, 120), TW - 160);
+      over.append(S("path", { class: "t-roll", d: `M${p.x} ${y0} C${p.x} ${y0 + 24} ${x2} ${ROLL_Y - 24} ${x2} ${ROLL_Y - 7}` }),
+        S("path", { class: "t-ghost", d: `M${x2} ${ROLL_Y - 7} l7 7 l-7 7 l-7 -7 z` }), S("text", { class: "t-harm", x: x2 + 13, y: ROLL_Y + 4 }, "rollout ends at harm " + f2(o.roll.harm)));
     }
-    over.append(S("text", { class: "t-hud", x: 6, y: 14 }, o.hud || ""));
+    over.append(S("text", { class: "t-hud", x: 8, y: 16 }, o.hud || ""));
   };
+}
+
+// The root's arms, as the bandit compares them: mean harm (solid) plus the exploration bonus c·√(ln N / n) (light).
+function armsPanel(tree, chosen, c) {
+  const N = tree.visits, kids = tree.children, limit = Math.ceil(Math.max(N, 1) ** 0.5);
+  const rows = kids.map((k) => {
+    const m = k.visits ? k.total / k.visits : 0, bonus = k.visits && N ? c * Math.sqrt(Math.log(N) / k.visits) : 0;
+    return { k, m, bonus, ucb: m + bonus };
+  });
+  const top = Math.max(1.2, ...rows.map((r) => r.ucb));
+  const list = h("div", { class: "arms" }, rows.map((r) => {
+    const name = lastUnit("root", r.k.label).split(" ; ").map((a) => short(a.replace(/^remove /, "− ").replace(/^add /, "+ "), 30)).join("  ");
+    const row = h("div", { class: "arm" + (r.k.label === chosen ? " chosen" : "") + (r.k.done ? " done" : "") + (r.k.visits ? "" : " new") },
+      h("span", { class: "arm-name" }, name),
+      h("i", { class: "arm-bar" }, h("b", { class: "arm-mean" }), h("b", { class: "arm-bonus" })),
+      h("span", { class: "arm-val" }, r.k.visits ? `${f2(r.m)} + ${f2(r.bonus)} = ${f2(r.ucb)}` : "new arm"),
+      h("span", { class: "arm-n" }, r.k.done ? "explored" : "n " + r.k.visits));
+    row.querySelector(".arm-mean").style.width = (r.m / top) * 100 + "%";
+    row.querySelector(".arm-mean").style.background = heat(r.m);
+    row.querySelector(".arm-bonus").style.width = (r.bonus / top) * 100 + "%";
+    return row;
+  }));
+  const room = kids.length < limit;
+  return h("div", {}, list.children.length ? list : h("p", { class: "p-note" }, "No arms yet: the root opens its first."),
+    h("p", { class: "p-note", html: `Root visits N = <b>${N}</b>. ${kids.length} arm${kids.length === 1 ? "" : "s"} open, room for ⌈√N⌉ = ${limit}: ${room ? "<b>room to open a new arm</b>, so the walk stops at the root and expands" : "full, so it follows the arm with the highest UCB"}.` }));
 }
 
 // ---------- left-hand panels ----------
@@ -277,7 +324,7 @@ function uctAct() {
   const clone = (t) => JSON.parse(JSON.stringify(t));
   const find = (t, id) => (t.label === id || (id === "root" && t.label === "root") ? t : t.children.map((c) => find(c, id)).find(Boolean));
   const hudOf = (e, best) => `evaluations ${e} / ${U.evaluations}   ·   best harm so far ${f2(best)}`;
-  steps.push({ tag: "bandit", line: [0, 1], text: `<b>The bandit.</b> Each node of the tree is a chain of edits, and the units that could come next are its arms. The bandit spends a budget of <b>${U.evaluations} harm evaluations</b> where earlier chains hurt most, and still tries new arms. Node size is visits; colour is mean harm, from blue to red.`,
+  steps.push({ tag: "bandit", line: [0, 1], text: `<b>The bandit.</b> Each node of the tree is a chain of edits, and the units that could come next are its arms. The bandit spends a budget of <b>${U.evaluations} harm evaluations</b> where earlier chains hurt most, and still tries new arms. Line thickness is visits, colour is mean harm from blue to red, and the gold star marks the best chain so far. Below, the root's arms show the choice the bandit makes.`,
     tree: { tree: empty, sel: [], hud: hudOf(0, 0) }, graph: { key: HONEST }, vars: [["budget", U.evaluations + " evaluations"], ["c", U.c], ["edits", "≤ " + W.budget]] });
   its.forEach((it, i) => {
     const prev = i ? its[i - 1].tree : empty, prevBest = i ? its[i - 1].best.harm : 0, sel = it.selected;
@@ -285,22 +332,22 @@ function uctAct() {
     const ucbs = Object.fromEntries(sel.map((s) => [s.chain.key, s.ucb.toFixed(2)]));
     const parentNode = find(prev, parentId);
     const withNew = () => { const t = clone(prev); if (it.expanded) find(t, parentId).children.push({ label: it.expanded.chain.key, visits: 0, total: 0, harm: it.expanded.harm, done: false, children: [] }); return t; };
-    const n = `Iteration ${i + 1}`;
+    const n = `Iteration ${i + 1}`, prevBestKey = i ? its[i - 1].best.chain.key : null;
     steps.push({ tag: "1 · select", line: [3, 4, 5], text: sel.length
-      ? `<b>${n}. Select.</b> Walk down from the root. At each node take the child with the highest <b>UCB = mean + ${U.c}·√(ln N / n)</b>: ${sel.map((s) => `${esc(short(lastUnit("root", s.chain.key), 40))} (UCB ${s.ucb.toFixed(2)}, mean ${s.mean.toFixed(2)})`).join(", then ")}. This node still has units untried, so the walk stops here.`
-      : `<b>${n}. Select.</b> The root has no child worth descending into yet, or room to open a new arm first, so the walk stops at the root.`,
-      tree: { tree: prev, sel: ["root", ...ids], ucb: ucbs, hud: hudOf(i ? its[i - 1].evaluations : 0, prevBest) }, graph: { key: sel.length ? parentId : HONEST }, vars: [["node", sel.length ? short(parentId, 60) : "root"], ["visits N", parentNode ? parentNode.visits : 0], ["path length", sel.length]], iter: i });
+      ? `<b>${n}. Select.</b> Walk down from the root. At each node take the child with the highest <b>UCB = mean + ${U.c}·√(ln N / n)</b>: ${sel.map((s) => `${esc(short(lastUnit("root", s.chain.key), 40))} (UCB ${s.ucb.toFixed(2)}, mean ${s.mean.toFixed(2)})`).join(", then ")}. This node still has room to open a new arm, so the walk stops here and expands it.`
+      : `<b>${n}. Select.</b> The root still has room to open a new arm, so the walk stops at the root.`,
+      tree: { tree: prev, sel: ["root", ...ids], ucb: ucbs, best: prevBestKey, hud: hudOf(i ? its[i - 1].evaluations : 0, prevBest) }, graph: { key: sel.length ? parentId : HONEST }, vars: [["node", sel.length ? short(parentId, 60) : "root"], ["visits N", parentNode ? parentNode.visits : 0], ["path length", sel.length]], iter: i });
     if (it.expanded) steps.push({ tag: "2 · expand", cls: "attack", line: [6], text: `<b>${n}. Expand.</b> Open the next untried unit and score the new chain: <b>${esc(short(it.expanded.chain.key, 90))}</b> does harm <b>${f2(it.expanded.harm)}</b>.`,
-      tree: { tree: withNew(), sel: ["root", ...ids], fresh: it.expanded.chain.key, hud: hudOf(it.evaluations - (it.rollout && it.rollout.chain.key !== it.expanded.chain.key ? 1 : 0), prevBest) }, graph: { key: it.expanded.chain.key }, vars: [["new chain", short(it.expanded.chain.key, 60)], ["harm", f2(it.expanded.harm)]], iter: i });
+      tree: { tree: withNew(), sel: ["root", ...ids], fresh: it.expanded.chain.key, best: prevBestKey, hud: hudOf(it.evaluations - (it.rollout && it.rollout.chain.key !== it.expanded.chain.key ? 1 : 0), prevBest) }, graph: { key: it.expanded.chain.key }, vars: [["new chain", short(it.expanded.chain.key, 60)], ["harm", f2(it.expanded.harm)]], iter: i });
     if (it.rollout) steps.push({ tag: "3 · rollout", cls: "attack", line: [7], text: `<b>${n}. Roll out.</b> Finish the chain with random units, ${it.rollout.chain.key === (it.expanded && it.expanded.chain.key) ? "though none fit" : "scoring only where it ends"}: <b>${esc(short(it.rollout.chain.key, 90))}</b> does harm <b>${f2(it.rollout.harm)}</b>.`,
-      tree: { tree: withNew(), sel: ["root", ...ids], fresh: it.expanded && it.expanded.chain.key, roll: { from: it.expanded ? it.expanded.chain.key : parentId, harm: it.rollout.harm }, hud: hudOf(it.evaluations, prevBest) }, graph: { key: it.rollout.chain.key }, vars: [["end chain", short(it.rollout.chain.key, 60)], ["harm", f2(it.rollout.harm)]], iter: i });
+      tree: { tree: withNew(), sel: ["root", ...ids], fresh: it.expanded && it.expanded.chain.key, roll: { from: it.expanded ? it.expanded.chain.key : parentId, harm: it.rollout.harm }, best: prevBestKey, hud: hudOf(it.evaluations, prevBest) }, graph: { key: it.rollout.chain.key }, vars: [["end chain", short(it.rollout.chain.key, 60)], ["harm", f2(it.rollout.harm)]], iter: i });
     const gain = it.best.harm > prevBest + 1e-9;
     steps.push({ tag: "4 · backpropagate", cls: "good", line: [8, 9], text: `<b>${n}. Backpropagate.</b> The reward is the largest harm on the path, <b>${f2(it.reward)}</b>, since an attacker may stop at any prefix. Every node on the path gains a visit and the reward.${gain ? ` <b>New best chain: harm ${f2(it.best.harm)}.</b>` : ""}`,
-      tree: { tree: it.tree, sel: ["root", ...ids, ...(it.expanded ? [it.expanded.chain.key] : [])], hud: hudOf(it.evaluations, it.best.harm) }, graph: { key: it.best.chain.key }, vars: [["reward", f2(it.reward)], ["best chain", short(it.best.chain.key, 60)], ["best harm", f2(it.best.harm)]], iter: i });
+      tree: { tree: it.tree, sel: ["root", ...ids, ...(it.expanded ? [it.expanded.chain.key] : [])], best: it.best.chain.key, hud: hudOf(it.evaluations, it.best.harm) }, graph: { key: it.best.chain.key }, vars: [["reward", f2(it.reward)], ["best chain", short(it.best.chain.key, 60)], ["best harm", f2(it.best.harm)]], iter: i });
   });
   const last = its[its.length - 1];
   steps.push({ tag: "bandit · result", cls: "good", line: [10], text: `<b>The bandit finds harm ${f2(U.final.harm)} in ${last.evaluations} evaluations:</b> ${esc(U.final.steps.join(", then "))}. Each edit alone does only 0.50, so greedy never took the first. Greedy stopped at ${f2(W.greedy.final.harm)}, and beam search at ${f2(W.beam.harm)}.`,
-    tree: { tree: last.tree, sel: [], hud: hudOf(last.evaluations, U.final.harm) }, graph: { key: U.final.key }, vars: [["chain", fmtChain(U.final.steps)], ["harm", f2(U.final.harm)]], iter: its.length - 1 });
+    tree: { tree: last.tree, sel: [], best: U.final.key, hud: hudOf(last.evaluations, U.final.harm) }, graph: { key: U.final.key }, vars: [["chain", fmtChain(U.final.steps)], ["harm", f2(U.final.harm)]], iter: its.length - 1 });
   return { name: "3 · Bandit", code: [
     "def uct(harm, onto, units, budget, evaluations, c=0.5):",
     "    root = Node(chain=())",
@@ -375,7 +422,8 @@ const MARKUP = `
 <div class="seg" id="wt-acts" role="group" aria-label="Part of the search to watch"></div>
 <div class="stage">
   <div class="stage-grid">
-    <div><h4 id="wt-left-title">Evaluations</h4><div id="wt-tree"></div><div id="wt-bars"></div></div>
+    <div class="cell-tree" id="wt-tree-cell" hidden><h4>The bandit's search tree</h4><div id="wt-tree"></div></div>
+    <div><h4 id="wt-left-title">Evaluations</h4><div id="wt-bars"></div></div>
     <div><h4>The ontology</h4><div id="wt-graph"></div>
       <div class="gauges" aria-label="Answer quality">
         <div class="gauge" id="g-q0"><svg viewBox="0 0 46 46"><circle class="trk" cx="23" cy="23" r="17"/><circle class="val" cx="23" cy="23" r="17" transform="rotate(-90 23 23)" stroke-dasharray="0 107"/></svg><div>F1, Q1<b>1.00</b></div></div>
@@ -420,10 +468,12 @@ function paint() {
   const act = acts[st.a], step = act.steps[st.i];
   $$("#wt-acts button").forEach((b, j) => b.setAttribute("aria-pressed", String(j === st.a)));
   const useTree = !!step.tree;
-  $("#wt-left-title").textContent = useTree ? "The bandit's search tree" : act.left;
-  $("#wt-tree").hidden = !useTree; $("#wt-bars").hidden = useTree;
-  if (useTree) drawTree(step.tree.tree, { sel: step.tree.sel || [], ucb: step.tree.ucb, fresh: step.tree.fresh, roll: step.tree.roll, hud: step.tree.hud });
-  else $("#wt-bars").replaceChildren(barsPanel(step.left.rows, step.left.note));
+  $("#wt-left-title").textContent = useTree ? "The root's arms (UCB = mean + bonus)" : act.left;
+  $("#wt-tree-cell").hidden = !useTree;
+  if (useTree) {
+    drawTree(step.tree.tree, { sel: step.tree.sel || [], ucb: step.tree.ucb, fresh: step.tree.fresh, roll: step.tree.roll, hud: step.tree.hud, best: step.tree.best });
+    $("#wt-bars").replaceChildren(armsPanel(step.tree.tree, (step.tree.sel || [])[1], W.uct.c));
+  } else $("#wt-bars").replaceChildren(barsPanel(step.left.rows, step.left.note));
   const s = drawGraph(step.graph);
   const ring = (el, v, col) => { const c = 2 * Math.PI * 17; el.querySelector(".val").setAttribute("stroke-dasharray", `${(c * Math.max(0, v)).toFixed(1)} ${c.toFixed(1)}`); el.querySelector("b").textContent = f2(v); if (col) el.querySelector(".val").style.stroke = col; };
   Q.forEach((q, j) => ring($("#g-q" + j), s.f1[q.q], s.f1[q.q] < 0.5 ? "var(--s-bad)" : s.f1[q.q] < 1 ? "var(--s-spur)" : "var(--s-hit)"));
