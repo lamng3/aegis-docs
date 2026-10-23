@@ -1,0 +1,17 @@
+<!--
+title: Step by step
+kicker: Watch it work
+lede: Replay a real run of the attack search on the small materials ontology, one step at a time: the affected area, greedy search, the bandit's search tree, and the locks that defend.
+description: A step-by-step replay of Aegis's attack search on a small ontology: how the affected area is measured, why greedy search gets stuck, how the bandit finds a worse chain, and how locking answers it.
+-->
+<div class="callout" role="note"><span class="label">What this is</span><p>A recording of the library, not a simulation. <code>experiments/walkthrough/trace.py</code> runs Aegis's own affected-area ranking, greedy search, UCT, beam search, and best-response locking on the materials ontology of the <a href="playground.html">playground</a>, and writes every step down. This page replays it. The code on the left of each step is the library's, shortened; the line it is running is highlighted, with its result beside it.</p></div>
+<div id="walk" aria-label="Step-by-step replay">Loading the recorded run…</div>
+<script src="walkthrough.js"></script>
+<h2 id="how-to-read-it">How to read it</h2>
+<ol>
+<li><strong>Affected area.</strong> Two questions are asked of the ontology. Each element is taken out in turn and both are asked again: the drop in mean F1 is that element's Δ. The elements with Δ above zero glow; they are the part of the ontology the answers depend on, and what an attacker would pick first.</li>
+<li><strong>Greedy.</strong> Add whichever unit raises harm most, until nothing does. It stops early, because each edit that matters here looks weak until the other has been made.</li>
+<li><strong>Bandit.</strong> Every node of the tree is a chain of edits. Selection follows the highest UCB, expansion scores one new chain, the rollout finishes it with random units, and backpropagation updates the visits on the path. Bigger nodes were visited more; redder nodes did more harm.</li>
+<li><strong>Lock.</strong> The defender has room for two locks. Each round takes the attacker's best chain, tries locking each triple it removes, and keeps the one that leaves the attacker the least harm.</li>
+</ol>
+<p>Keys: <kbd>←</kbd> and <kbd>→</kbd> step, <kbd>space</kbd> plays. Drag the scrubber to jump to any step.</p>

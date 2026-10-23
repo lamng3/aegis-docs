@@ -18,6 +18,7 @@ PAGES = [
     ("index", "Overview"),
     ("getting-started", "Getting started"),
     ("playground", "Playground"),
+    ("walkthrough", "Step by step"),
     ("concepts", "Concepts"),
     ("attacks", "Attack search"),
     ("protection", "Protection"),
@@ -91,6 +92,7 @@ HEAD = """<meta charset="utf-8">
 <link rel="stylesheet" href="style.css">"""
 
 CARDS = [
+    ("walkthrough", "Step by step", "Watch the attack search work: the affected area, greedy, the bandit's tree, and the locks."),
     ("playground", "Playground", "Attack a small ontology in the browser: edit it, search for the worst chain, find the damage, and roll back."),
     ("getting-started", "Getting started", "Run the example: attack a small materials ontology, then recover."),
     ("concepts", "Concepts", "Counterfactual attacks, and the affected area that measures them."),
