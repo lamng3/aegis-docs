@@ -19,6 +19,7 @@
   <nav class="site" aria-label="Site">
     <a href="getting-started.html">Start</a>
     <a href="playground.html">Playground</a>
+    <a href="walkthrough.html">Step by step</a>
     <a href="reference.html">Reference</a>
     <label class="nav-button" for="nav-toggle">Menu</label>
     <a href="https://github.com/lamng3/aegis" class="pill">GitHub ↗</a>
@@ -34,6 +35,7 @@
     <div class="actions">
       <a class="btn solid" href="getting-started.html">Get started</a>
       <a class="btn" href="playground.html">Playground</a>
+      <a class="btn" href="walkthrough.html">Watch it step by step</a>
       <a class="btn" href="experiments.html">Experiments</a>
     </div>
   </div>
@@ -49,6 +51,11 @@
     <p class="chain" id="locked"></p>
     <p class="note">Harm runs from 0 to 1 over the ontology's query workload. Top bars: the most harmful chain each search finds. Bottom bars: harm left after the locks, against a two-edit attacker. The numbers come from <code>results/attack_defense/2026-10-18.json</code>; this page computes nothing.</p>
   </div>
+</section>
+<section class="block" id="watch">
+  <h2>Watch the attack search work</h2>
+  <p class="sub">A recorded run of the library's own search on a small ontology. The bandit grows its tree one iteration at a time while the ontology on the right is attacked. Pause, step, or switch to the affected area, greedy search, or locking. <a href="walkthrough.html">Open the full page</a>.</p>
+  <div role="group" id="walk" data-act="2" data-autoplay="true" aria-label="Step-by-step replay">Loading the recorded run…</div>
 </section>
 <section class="block">
   <h2>What it does</h2>
@@ -81,6 +88,7 @@ pip install -e ".[dev]"
 python examples/attack_and_recover.py</code></pre>
 <p>The code is <a href="https://github.com/lamng3/aegis">github.com/lamng3/aegis</a>.</p></div></section>
 <script src="demo.js"></script>
+<script src="walkthrough.js"></script>
 </main>
 <footer class="site">Aegis by <a href="https://github.com/lamng3">Lam Nguyen</a> · attack search, protection, and recovery for ontology-grounded agents</footer>
 </body>

@@ -378,7 +378,7 @@ root.className = "walk";
 root.innerHTML = MARKUP;
 const drawGraph = makeGraph($("#wt-graph")), drawTree = makeTree($("#wt-tree"));
 const params = new URLSearchParams(location.search);
-const st = { a: Math.min(acts.length - 1, +params.get("act") || 0), i: 0, timer: null };
+const st = { a: Math.min(acts.length - 1, +(params.get("act") || root.dataset.act) || 0), i: 0, timer: null };
 st.i = Math.min(acts[st.a].steps.length - 1, +params.get("step") || 0);
 const speeds = { slow: 2200, normal: 1300, fast: 450 };
 
@@ -429,5 +429,10 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "ArrowRight") { stop(); go(st.i + 1); } else if (e.key === "ArrowLeft") { stop(); go(st.i - 1); } else if (e.key === " ") { e.preventDefault(); play(); }
 });
 paint();
+if (root.dataset.autoplay && !matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+  // Start when the replay scrolls into view; a visitor who touches a control takes over.
+  const seen = new IntersectionObserver((entries) => { if (entries[0].isIntersecting) { seen.disconnect(); play(); } }, { threshold: 0.5 });
+  seen.observe(root);
+}
 }
 })();
