@@ -132,7 +132,7 @@ HOME = """<section class="hero">
 </section>
 <section class="block" id="watch">
   <h2>Watch the attack search work</h2>
-  <p class="sub">A recorded run of the library's own search on a small ontology. The bandit grows its tree one iteration at a time while the ontology on the right is attacked. Pause, step, or switch to the affected area, greedy search, or locking. <a href="showcase.html">Open the full page</a>.</p>
+  <p class="sub">A recorded run of the library's own search on a small ontology. The bandit grows its tree one iteration at a time while the ontology on the right is attacked. Pause, step, or switch to impact, greedy search, locking, or ontological matching. <a href="showcase.html">Open the full page</a>.</p>
   <div id="walk" data-act="2" data-autoplay="true" aria-label="Step-by-step replay">Loading the recorded run…</div>
 </section>
 <section class="block">

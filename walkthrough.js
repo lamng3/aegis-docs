@@ -214,7 +214,7 @@ function areaAct() {
   const maxC = Math.max(...cs.map((c) => c.delta)), maxR = Math.max(...rs.map((c) => c.delta));
   const steps = [];
   steps.push({ tag: "workload", line: [0, 1], text: `Two questions are put to the ontology, <b>${esc(Q[0].q)}</b> and <b>${esc(Q[1].q)}</b>. Each is answered by walking <code>subClassOf</code> down from a seed. Teal nodes are correct answers; the blue nodes are the seeds.`,
-    graph: { key: HONEST, tags: { [Q[0].seed]: "Q1", [Q[1].seed]: "Q2" } }, left: { rows: Q.map((q, i) => ({ label: `${qShort(i)} gold`, value: 1, text: q.gold.length + " answers", cls: "pick" })), note: Q.map((q, i) => `<b>${qShort(i)}</b> seed ${q.seed}: ${q.gold.join(", ")}`).join("<br>") }, vars: [["workload", "2 queries"], ["P(O)", "1.00"]] });
+    graph: { key: HONEST, tags: { [Q[0].seed]: "Q1", [Q[1].seed]: "Q2" } }, left: { rows: Q.map((q, i) => ({ label: `${qShort(i)} gold`, value: 1, text: q.gold.length + (q.gold.length === 1 ? " answer" : " answers"), cls: "pick" })), note: Q.map((q, i) => `<b>${qShort(i)}</b> seed ${q.seed}: ${q.gold.join(", ")}`).join("<br>") }, vars: [["workload", "2 queries"], ["P(O)", "1.00"]] });
   Q.forEach((q, i) => steps.push({ tag: "reach", line: [2], text: `<b>What ${qShort(i)} can reach.</b> Only these concepts are connected to the seed ${esc(q.seed)}: ${esc(q.scope.join(", "))}. Everything else has Δ = 0 for this question, since no path joins it to the answer, so it never needs scoring.`,
     graph: { key: HONEST, glow: Object.fromEntries(q.scope.map((c) => [c, 0.55])), tags: { [q.seed]: qShort(i) } }, left: { rows: q.scope.map((c) => ({ label: c, value: 1, text: "in scope" })), note: "The retrieval scope of the query." }, vars: [["seed", q.seed], ["scope", q.scope.length + " of " + W.ontology.concepts.length + " concepts"]] }));
   const glow = {};
@@ -232,9 +232,9 @@ function areaAct() {
       vars: [["r", r.name], ["P(O − r)", f2(1 - r.delta)], ["Δr", f2(r.delta)]] });
   });
   const ranked = [...W.units].sort((a, b) => b.harm - a.harm).slice(0, 14);
-  steps.push({ tag: "affected area", cls: "good", line: [7, 8], text: `<b>The affected area is the glowing part.</b> It is where Δ > 0: the few elements the answers lean on. Ranked by Δ, they become the attacker's building blocks, <b>${W.units.length} units</b>: a removal, a rewire (remove then re-add elsewhere), or a flood of look-alikes. Bars show each unit's harm on its own.`,
+  steps.push({ tag: "vulnerable area", cls: "good", line: [7, 8], text: `<b>The vulnerable area is the glowing part.</b> It is where Δ > 0: the few elements the answers lean on. Ranked by Δ, they become the attacker's building blocks, <b>${W.units.length} units</b>: a removal, a rewire (remove then re-add elsewhere), or a flood of look-alikes. Bars show each unit's harm on its own.`,
     graph: { key: HONEST, glow, edgeGlow: eg }, left: { rows: ranked.map((u) => ({ label: short(u.label, 44), value: u.harm, cls: u.harm >= 0.6 ? "cur" : "" })), note: "Top 14 of the units, by harm when applied alone." }, vars: [["units", W.units.length], ["best alone", f2(ranked[0].harm)]] });
-  return { name: "1 · Affected area", code: [
+  return { name: "1 · Impact", left: "Impact of each element", code: [
     "def affected_area(score, onto, seeds):",
     "    base = score(onto)  # mean answer F1",
     "    scope = onto.reachable(seeds)  # outside it, every Δ is 0",
@@ -260,7 +260,7 @@ function greedyAct() {
   const fin = W.greedy.final;
   steps.push({ tag: "greedy · result", cls: "attack", line: [7], text: `<b>Greedy ends at harm ${f2(fin.harm)}.</b> Every single edit is weak on its own, so a method that adds the best edit each time cannot see that two weak edits together are far worse. The bandit, next, finds ${f2(W.uct.final.harm)}.`,
     graph: { key: fin.key }, left: { rows: [{ label: "Greedy", value: fin.harm, cls: "cur" }, { label: "Beam", value: W.beam.harm }, { label: "Bandit (UCT)", value: W.uct.final.harm, cls: "pick" }], note: "Same ontology, same budget of " + W.budget + " edits." }, vars: [["chain", fmtChain(fin.steps)], ["harm", f2(fin.harm)]] });
-  return { name: "2 · Greedy", code: [
+  return { name: "2 · Greedy", left: "Harm of each option", code: [
     "def greedy(harm, onto, units, budget):",
     "    chain, best = (), 0.0",
     "    while True:",
@@ -331,7 +331,7 @@ function lockAct() {
   });
   steps.push({ tag: "result", cls: "good", line: [6], text: `<b>${L.rounds.length} locks take the best attack from ${f2(L.none)} to ${f2(L.final)}.</b> Locking is a light mitigation: it does not stop every edit, it makes the worst one harder and sends it to a person.`,
     graph: { key: HONEST, locked: [...locked] }, left: { rows: [{ label: "No locks", value: L.none }, ...L.rounds.map((r, i) => ({ label: `${i + 1} lock${i ? "s" : ""}`, value: r.residual, cls: i === L.rounds.length - 1 ? "pick" : "" }))], note: "Residual harm as locks are added." }, vars: [["locked", locked.join(", ")], ["residual", f2(L.final)]] });
-  return { name: "4 · Lock", code: [
+  return { name: "4 · Lock", left: "Residual harm", code: [
     "def lock_best_response(attacker, onto, units, m):",
     "    locks = []",
     "    for _ in range(m):",
@@ -339,6 +339,35 @@ function lockAct() {
     "        options = removed_by(best.chain, onto)  # only these triples can stop it",
     "        locks.append(min(options, key=lambda r: residual(attacker, units, [*locks, r])))",
     "    return locks" ], steps };
+}
+
+function matchAct() {
+  const M = W.matching, steps = [], seedOf = (q) => q.seed;
+  const fmt = (d) => d.toFixed(1).replace(/^0/, "");
+  M.chains.forEach((ch) => {
+    const honestSets = ch.steps[0].lsim;
+    ch.steps.forEach((st, i) => {
+      const rows = [], tags = {}, glow = {};
+      Q.forEach((q, qi) => {
+        const set = st.lsim[q.q], all = new Set([...Object.keys(honestSets[q.q]), ...Object.keys(set)]);
+        [...all].sort((a, b) => (set[a] ?? honestSets[q.q][a]) - (set[b] ?? honestSets[q.q][b])).forEach((c) => {
+          const inNow = c in set, was = c in honestSets[q.q];
+          rows.push({ label: `${qShort(qi)} · ${c}`, value: inNow ? 1 - set[c] / (M.alpha * 1.25) : 0.02, text: inNow ? "dist " + set[c].toFixed(2) + (was ? "" : " · new") : "out of reach", cls: inNow ? (was ? "" : "cur") : "dim" });
+          if (inNow) tags[c] = (tags[c] ? tags[c] + " " : "") + fmt(set[c]);
+          if (!inNow || !was) glow[c] = 1;
+        });
+      });
+      Q.forEach((q, qi) => { if (q.seed in st.lsim[q.q]) tags[q.seed] = qShort(qi); });
+      const lost = Q.flatMap((q, qi) => st.lost[q.q].map((c) => `${c} no longer matches ${qShort(qi)}`)), gained = Q.flatMap((q, qi) => st.gained[q.q].map((c) => `${c} now matches ${qShort(qi)}`));
+      const who = ch.name === "greedy" ? "greedy's chain" : "the bandit's chain";
+      steps.push(i === 0
+        ? { tag: `honest · ${ch.name}`, cls: "", text: `<b>Ontological matching</b> (Ma et al., PVLDB 2019). A pattern node labelled <i>l</i> matches every node whose label is in the relevant set <b>lsim(l) = { l′ : dist(l, l′) ≤ ${M.alpha} }</b>, where dist is the cheapest path in the ontology: ${M.weights.subClassOf} per subClassOf edge, ${M.weights.hasProperty} per descriptive one. The numbers on the nodes are distances from each question's seed. Now replay ${who}, ${esc(ch.steps.slice(1).map((s) => s.action).join(", then "))}.`,
+            graph: { key: st.key, tags }, left: { rows, note: `Relevant sets of Material (Q1) and Temperature (Q2), α = ${M.alpha}.` }, vars: [] }
+        : { tag: `edit ${i} · ${ch.name}`, cls: "attack", text: `<b>${esc(st.action)}.</b> ${lost.length || gained.length ? esc([...lost, ...gained].join("; ")) + "." : "No relevant set changes yet: the paths to each seed are intact."} A graph node is matched through its label, so ${lost.length ? "entities typed with a lost label drop out of the pattern's matches" : ""}${lost.length && gained.length ? ", and " : ""}${gained.length ? "entities typed with a gained label are matched where they do not belong" : lost.length ? "" : "nothing changes in the graph's matches"}. The graph itself was never edited.`,
+            graph: { key: st.key, tags, glow }, left: { rows, note: "Bars: closeness to the seed. Faded: dropped out of reach. Red: newly in reach." }, vars: [] });
+    });
+  });
+  return { name: "5 · Ontological match", left: "Relevant sets (lsim)", code: [], steps: steps.map((s) => ({ line: [], ...s })) };
 }
 
 // ---------- the player ----------
@@ -352,7 +381,8 @@ const MARKUP = `
         <div class="gauge" id="g-q0"><svg viewBox="0 0 46 46"><circle class="trk" cx="23" cy="23" r="17"/><circle class="val" cx="23" cy="23" r="17" transform="rotate(-90 23 23)" stroke-dasharray="0 107"/></svg><div>F1, Q1<b>1.00</b></div></div>
         <div class="gauge" id="g-q1"><svg viewBox="0 0 46 46"><circle class="trk" cx="23" cy="23" r="17"/><circle class="val" cx="23" cy="23" r="17" transform="rotate(-90 23 23)" stroke-dasharray="0 107"/></svg><div>F1, Q2<b>1.00</b></div></div>
         <div class="gauge big" id="g-harm"><svg viewBox="0 0 46 46"><circle class="trk" cx="23" cy="23" r="17"/><circle class="val" cx="23" cy="23" r="17" transform="rotate(-90 23 23)" stroke-dasharray="0 107"/></svg><div>harm<b>0.00</b></div></div>
-      </div></div>
+      </div>
+      <div class="aff" id="wt-aff" aria-label="Affected area"></div></div>
   </div>
   <div class="legend-art"><span style="--c:var(--s-seed)"><i></i>seed of a question</span><span style="--c:var(--s-hit)"><i></i>correct answer</span><span style="--c:var(--s-bad)"><i></i>missing or injected</span><span style="--c:var(--s-spur)"><i></i>wrong answer</span><span style="--c:var(--s-gold)"><i></i>locked or chosen</span></div>
   <ol class="phases" id="wt-phases" aria-label="Stage"></ol>
@@ -369,13 +399,14 @@ const MARKUP = `
   <span class="count" id="wt-count"></span>
 </div>
 `;
-const acts = [areaAct(), greedyAct(), uctAct(), lockAct()];
+const acts = [areaAct(), greedyAct(), uctAct(), lockAct(), matchAct()];
 // The stages of each part, and which step tags belong to which stage.
 const PHASES = [
-  [["Workload", "workload"], ["Reach", "reach"], ["Remove a concept", "scan concept"], ["Cut a relation", "scan relation"], ["Affected area", "affected area"]],
+  [["Workload", "workload"], ["Reach", "reach"], ["Remove a concept", "scan concept"], ["Cut a relation", "scan relation"], ["Vulnerable area", "vulnerable area"]],
   [["Try every unit", "greedy · try all"], ["Keep the best", "greedy · keep best"], ["Stop", "greedy · stop", "greedy · result"]],
-  [["Select", "1 ·"], ["Expand", "2 ·"], ["Roll out", "3 ·"], ["Backpropagate", "4 ·"], ["Result", "bandit"]],
+  [["Select", "1 ·"], ["Expand", "2 ·"], ["Roll out", "3 ·"], ["Backpropagate", "4 ·"], ["Result", "bandit · result"]],
   [["No locks", "no locks"], ["Best attack", "attacker"], ["Try each lock", "candidate"], ["Lock it", "lock"], ["Result", "result"]],
+  [["Relevant sets", "honest"], ["First edit", "edit 1"], ["Second edit", "edit 2"]],
 ];
 root.className = "walk";
 root.innerHTML = MARKUP;
@@ -389,7 +420,7 @@ function paint() {
   const act = acts[st.a], step = act.steps[st.i];
   $$("#wt-acts button").forEach((b, j) => b.setAttribute("aria-pressed", String(j === st.a)));
   const useTree = !!step.tree;
-  $("#wt-left-title").textContent = useTree ? "The bandit's search tree" : act.name.slice(4) === "Affected area" ? "Impact of each element" : "Evaluations";
+  $("#wt-left-title").textContent = useTree ? "The bandit's search tree" : act.left;
   $("#wt-tree").hidden = !useTree; $("#wt-bars").hidden = useTree;
   if (useTree) drawTree(step.tree.tree, { sel: step.tree.sel || [], ucb: step.tree.ucb, fresh: step.tree.fresh, roll: step.tree.roll, hud: step.tree.hud });
   else $("#wt-bars").replaceChildren(barsPanel(step.left.rows, step.left.note));
@@ -397,6 +428,11 @@ function paint() {
   const ring = (el, v, col) => { const c = 2 * Math.PI * 17; el.querySelector(".val").setAttribute("stroke-dasharray", `${(c * Math.max(0, v)).toFixed(1)} ${c.toFixed(1)}`); el.querySelector("b").textContent = f2(v); if (col) el.querySelector(".val").style.stroke = col; };
   Q.forEach((q, j) => ring($("#g-q" + j), s.f1[q.q], s.f1[q.q] < 0.5 ? "var(--s-bad)" : s.f1[q.q] < 1 ? "var(--s-spur)" : "var(--s-hit)"));
   ring($("#g-harm"), s.harm);
+  // AFF, as forensics.affected_area computes it: the answers each question gained and lost against the honest ontology.
+  $("#wt-aff").replaceChildren(h("b", {}, "AFF"), ...(Object.keys(s.aff || {}).length
+    ? Q.filter((q) => s.aff[q.q]).map((q) => h("span", { class: "aff-q" }, qShort(Q.indexOf(q)) + " ",
+        ...s.aff[q.q].removed.map((c) => h("i", { class: "rm" }, "−" + c)), ...s.aff[q.q].added.map((c) => h("i", { class: "add" }, "+" + c))))
+    : [h("span", { class: "aff-none" }, "empty: every answer is as before")]));
   $("#wt-caption").replaceChildren(h("span", { class: "tag " + (step.cls || "") }, step.tag), h("span", { html: step.text }));
   if (!$("#wt-code")) { /* no code panel */ } else {
   const lastOn = Math.max(...step.line), res = "  → " + step.vars.map(([k, v]) => `${k} = ${v}`).join("  ·  ");
