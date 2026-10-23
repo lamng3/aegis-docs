@@ -57,11 +57,11 @@ function view(key) {
 function makeGraph(el) {
   const svg = S("svg", { viewBox: "0 0 600 392", role: "img", "aria-label": "The ontology graph" });
   const glow = (id, color, sd) => S("filter", { id, x: "-60%", y: "-60%", width: "220%", height: "220%" },
-    S("feGaussianBlur", { in: "SourceGraphic", stdDeviation: sd, result: "b" }), S("feFlood", { "flood-color": color, "flood-opacity": ".85" }),
+    S("feGaussianBlur", { in: "SourceGraphic", stdDeviation: sd, result: "b" }), S("feFlood", { style: `flood-color:${color}`, "flood-opacity": ".35" }),
     S("feComposite", { in2: "b", operator: "in", result: "c" }), S("feMerge", {}, S("feMergeNode", { in: "c" }), S("feMergeNode", { in: "SourceGraphic" })));
   svg.append(S("defs", {},
-    glow("glow-red", "#ff5d73", 4), glow("glow-teal", "#2dd4bf", 4), glow("glow-blue", "#7aa7ff", 5), glow("glow-orange", "#ffa14a", 4), glow("glow-gold", "#f5c451", 4),
-    S("radialGradient", { id: "halo" }, S("stop", { offset: "0", "stop-color": "#ff5d73", "stop-opacity": ".75" }), S("stop", { offset: "1", "stop-color": "#ff5d73", "stop-opacity": "0" })),
+    glow("glow-red", "var(--s-bad)", 4), glow("glow-teal", "var(--s-hit)", 4), glow("glow-blue", "var(--s-seed)", 5), glow("glow-orange", "var(--s-spur)", 4), glow("glow-gold", "var(--s-gold)", 4),
+    S("radialGradient", { id: "halo" }, S("stop", { offset: "0", style: "stop-color:var(--s-bad)", "stop-opacity": ".55" }), S("stop", { offset: "1", style: "stop-color:var(--s-bad)", "stop-opacity": "0" })),
     S("marker", { id: "arr", viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto" }, S("path", { d: "M0 1 L9 5 L0 9 z", fill: "context-stroke" }))));
   const edgeLayer = S("g"), nodeLayer = S("g");
   svg.append(edgeLayer, nodeLayer);
@@ -74,14 +74,13 @@ function makeGraph(el) {
     const path = S("path", { class: "g-edge off" + (r[1] === "subClassOf" ? "" : " prop"), d: `M${p0} Q${c} ${p2}`, "marker-end": "url(#arr)", pathLength: 1 });
     const x = S("g", { class: "g-x", opacity: 0 }, S("path", { d: `M${mid[0] - 6} ${mid[1] - 6} l12 12 M${mid[0] + 6} ${mid[1] - 6} l-12 12`, class: "g-x" }));
     const lock = S("g", { class: "g-lock", opacity: 0, transform: `translate(${mid[0]} ${mid[1]})` },
-      S("circle", { r: 11, fill: "#0a0f1f", stroke: "#f5c451", "stroke-width": 1.6 }),
-      S("path", { d: "M-3.5 -1 v-2.5 a3.5 3.5 0 0 1 7 0 v2.5", fill: "none", stroke: "#f5c451", "stroke-width": 1.6 }), S("rect", { x: -5, y: -1, width: 10, height: 7, rx: 1.5, fill: "#f5c451" }));
+      S("circle", { r: 11 }), S("path", { d: "M-3.5 -1 v-2.5 a3.5 3.5 0 0 1 7 0 v2.5" }), S("rect", { x: -5, y: -1, width: 10, height: 7, rx: 1.5 }));
     edgeLayer.append(path, x, lock);
     edges.set(k, { path, x, lock });
   }
   for (const c of allConcepts) {
     const [px, py] = posOf(c);
-    const halo = S("circle", { class: "g-halo", r: R, cx: 0, cy: 0 }), body = S("circle", { class: "body", r: R });
+    const halo = S("circle", { class: "g-halo", r: R, cx: 0, cy: 0, fill: "url(#halo)" }), body = S("circle", { class: "body", r: R });
     const tag = S("text", { y: 0, "font-size": 11, "font-weight": 600 });
     const g = S("g", { class: "g-node off", transform: `translate(${px} ${py})` }, halo, body, tag, S("text", { y: R + 14 }, c));
     nodeLayer.append(g);
@@ -98,7 +97,7 @@ function makeGraph(el) {
       const hot = (spec.hot || []).includes(label), locked = (spec.locked || []).includes(label), eg = (spec.edgeGlow || {})[label] || 0;
       e.path.setAttribute("class", `g-edge ${status === "on" ? "" : status}${e.path.classList.contains("prop") ? " prop" : ""}${hot ? " hot" : ""}${locked ? " locked" : ""}`);
       e.path.style.strokeWidth = eg ? 1.6 + eg * 3 : "";
-      if (eg && status === "on") { e.path.style.stroke = "#ffa14a"; } else e.path.style.stroke = "";
+      if (eg && status === "on") { e.path.style.stroke = "var(--s-spur)"; } else e.path.style.stroke = "";
       e.x.setAttribute("opacity", status === "gone" ? 1 : 0);
       e.lock.setAttribute("opacity", locked ? 1 : 0);
     }
@@ -124,8 +123,7 @@ function makeGraph(el) {
 }
 
 // ---------- the search tree ----------
-const lerp = (a, b, t) => a.map((x, i) => Math.round(x + (b[i] - x) * t));
-const heat = (t) => `rgb(${lerp([76, 108, 200], [255, 93, 115], Math.min(1, Math.max(0, t)))})`;
+const heat = (t) => `color-mix(in srgb, var(--s-bad) ${Math.round(Math.min(1, Math.max(0, t)) * 100)}%, var(--s-low))`;
 function makeTree(el) {
   const svg = S("svg", { viewBox: "0 0 640 392", role: "img", "aria-label": "The search tree" });
   const edgeLayer = S("g"), nodeLayer = S("g"), over = S("g");
@@ -171,7 +169,7 @@ function makeTree(el) {
       nd.g.setAttribute("class", `t-node${sel ? " sel" : ""}${fresh ? " fresh" : ""}${n.done ? " done" : ""}`);
       const r = f.parent === null ? 11 : radius(n);
       nd.c.setAttribute("r", r);
-      nd.c.style.fill = f.parent === null ? "#7aa7ff" : heat(n.visits ? n.total / n.visits : n.harm);
+      nd.c.style.fill = f.parent === null ? "var(--s-seed)" : heat(n.visits ? n.total / n.visits : n.harm);
       nd.t.textContent = f.parent === null ? "" : short(lastUnit(f.parent, f.id), f.hidden ? 20 : 34) + (f.hidden ? `   (+${f.hidden} more)` : "");
       nd.t.setAttribute("x", r + 6);
       nd.cnt.textContent = f.parent !== null && r >= 12 ? n.visits : "";
@@ -193,9 +191,9 @@ function makeTree(el) {
     if (o.roll && pos.get(o.roll.from)) {
       const [x, y] = pos.get(o.roll.from), x2 = Math.min(x + 150, 600), y2 = y + 34;
       over.append(S("path", { class: "t-roll", d: `M${x} ${y} C${x + 60} ${y} ${x2 - 60} ${y2} ${x2} ${y2}` }),
-        S("path", { class: "t-ghost", d: `M${x2} ${y2 - 7} l7 7 l-7 7 l-7 -7 z` }), S("text", { x: x2 + 11, y: y2 + 4, "font-size": 13, "font-weight": 600, fill: "#ffa14a", style: "fill:#ffa14a" }, "harm " + f2(o.roll.harm)));
+        S("path", { class: "t-ghost", d: `M${x2} ${y2 - 7} l7 7 l-7 7 l-7 -7 z` }), S("text", { class: "t-harm", x: x2 + 11, y: y2 + 4 }, "harm " + f2(o.roll.harm)));
     }
-    over.append(S("text", { x: 6, y: 14, "font-size": 13, style: "fill:#7d89a8" }, o.hud || ""));
+    over.append(S("text", { class: "t-hud", x: 6, y: 14 }, o.hud || ""));
   };
 }
 
@@ -356,7 +354,7 @@ const MARKUP = `
         <div class="gauge big" id="g-harm"><svg viewBox="0 0 46 46"><circle class="trk" cx="23" cy="23" r="17"/><circle class="val" cx="23" cy="23" r="17" transform="rotate(-90 23 23)" stroke-dasharray="0 107"/></svg><div>harm<b>0.00</b></div></div>
       </div></div>
   </div>
-  <div class="legend-art"><span style="--c:#7aa7ff"><i></i>seed of a question</span><span style="--c:#2dd4bf"><i></i>correct answer</span><span style="--c:#ff5d73"><i></i>missing or injected</span><span style="--c:#ffa14a"><i></i>wrong answer</span><span style="--c:#f5c451"><i></i>locked or chosen</span></div>
+  <div class="legend-art"><span style="--c:var(--s-seed)"><i></i>seed of a question</span><span style="--c:var(--s-hit)"><i></i>correct answer</span><span style="--c:var(--s-bad)"><i></i>missing or injected</span><span style="--c:var(--s-spur)"><i></i>wrong answer</span><span style="--c:var(--s-gold)"><i></i>locked or chosen</span></div>
   <div class="caption" id="wt-caption" aria-live="polite"></div>
 </div>
 <div class="transport">
