@@ -193,6 +193,20 @@ def toc(body: str) -> str:
     return f'<nav class="toc"><strong>On this page</strong><ol>{items}</ol></nav>'
 
 
+def version_assets() -> None:
+    """Add a content hash to each page's script and stylesheet URLs, so a visitor's cached copy never outlives a rebuild."""
+    import hashlib
+
+    assets = ["style.css", "walkthrough.js", "demo.js", "pg.js", "playground.js", "arena.js", "search.js"]
+    stamp = {a: hashlib.sha256((ROOT / a).read_bytes()).hexdigest()[:8] for a in assets if (ROOT / a).exists()}
+    for page in ROOT.glob("*.html"):
+        text = original = page.read_text(encoding="utf-8")
+        for name, digest in stamp.items():
+            text = re.sub(rf'((?:src|href)="){re.escape(name)}(?:\?v=[0-9a-f]+)?"', rf'\g<1>{name}?v={digest}"', text)
+        if text != original:
+            page.write_text(text, encoding="utf-8")
+
+
 def main() -> None:
     for slug, label in PAGES:
         meta, body = parse((ROOT / "content" / f"{slug}.html").read_text(encoding="utf-8"))
@@ -215,6 +229,7 @@ def main() -> None:
     import normalize
 
     normalize.run(ROOT)
+    version_assets()
 
 
 if __name__ == "__main__":
