@@ -426,35 +426,6 @@ function lockAct() {
     "    return locks" ], steps };
 }
 
-function matchAct() {
-  const M = W.matching, steps = [], seedOf = (q) => q.seed;
-  const fmt = (d) => d.toFixed(1).replace(/^0/, "");
-  M.chains.forEach((ch) => {
-    const honestSets = ch.steps[0].lsim;
-    ch.steps.forEach((st, i) => {
-      const rows = [], tags = {}, glow = {};
-      Q.forEach((q, qi) => {
-        const set = st.lsim[q.q], all = new Set([...Object.keys(honestSets[q.q]), ...Object.keys(set)]);
-        [...all].sort((a, b) => (set[a] ?? honestSets[q.q][a]) - (set[b] ?? honestSets[q.q][b])).forEach((c) => {
-          const inNow = c in set, was = c in honestSets[q.q];
-          rows.push({ label: `${qShort(qi)} · ${c}`, value: inNow ? 1 - set[c] / (M.alpha * 1.25) : 0.02, text: inNow ? "dist " + set[c].toFixed(2) + (was ? "" : " · new") : "out of reach", cls: inNow ? (was ? "" : "cur") : "dim" });
-          if (inNow) tags[c] = (tags[c] ? tags[c] + " " : "") + fmt(set[c]);
-          if (!inNow || !was) glow[c] = 1;
-        });
-      });
-      Q.forEach((q, qi) => { if (q.seed in st.lsim[q.q]) tags[q.seed] = qShort(qi); });
-      const lost = Q.flatMap((q, qi) => st.lost[q.q].map((c) => `${c} no longer matches ${qShort(qi)}`)), gained = Q.flatMap((q, qi) => st.gained[q.q].map((c) => `${c} now matches ${qShort(qi)}`));
-      const who = ch.name === "greedy" ? "greedy's chain" : "the bandit's chain";
-      steps.push(i === 0
-        ? { tag: `honest · ${ch.name}`, cls: "", text: `<b>Ontological matching</b> (Ma et al., PVLDB 2019). A pattern node labelled <i>l</i> matches every node whose label is in the relevant set <b>lsim(l) = { l′ : dist(l, l′) ≤ ${M.alpha} }</b>, where dist is the cheapest path in the ontology: ${M.weights.subClassOf} per subClassOf edge, ${M.weights.hasProperty} per descriptive one. The numbers on the nodes are distances from each question's seed. Now replay ${who}, ${esc(ch.steps.slice(1).map((s) => s.action).join(", then "))}.`,
-            graph: { key: st.key, tags }, left: { rows, note: `Relevant sets of Material (Q1) and Temperature (Q2), α = ${M.alpha}.` }, vars: [] }
-        : { tag: `edit ${i} · ${ch.name}`, cls: "attack", text: `<b>${esc(st.action)}.</b> ${lost.length || gained.length ? esc([...lost, ...gained].join("; ")) + "." : "No relevant set changes yet: the paths to each seed are intact."} A graph node is matched through its label, so ${lost.length ? "entities typed with a lost label drop out of the pattern's matches" : ""}${lost.length && gained.length ? ", and " : ""}${gained.length ? "entities typed with a gained label are matched where they do not belong" : lost.length ? "" : "nothing changes in the graph's matches"}. The graph itself was never edited.`,
-            graph: { key: st.key, tags, glow }, left: { rows, note: "Bars: closeness to the seed. Faded: dropped out of reach. Red: newly in reach." }, vars: [] });
-    });
-  });
-  return { name: "5 · Ontological match", left: "Relevant sets (lsim)", code: [], steps: steps.map((s) => ({ line: [], ...s })) };
-}
-
 // ---------- the player ----------
 const MARKUP = `
 <div class="seg" id="wt-acts" role="group" aria-label="Part of the search to watch"></div>
@@ -485,14 +456,13 @@ const MARKUP = `
   <span class="count" id="wt-count"></span>
 </div>
 `;
-const acts = [areaAct(), greedyAct(), uctAct(), lockAct(), matchAct()];
+const acts = [areaAct(), greedyAct(), uctAct(), lockAct()];
 // The stages of each part, and which step tags belong to which stage.
 const PHASES = [
   [["Workload", "workload"], ["Reach", "reach"], ["Remove a concept", "scan concept"], ["Cut a relation", "scan relation"], ["Vulnerable area", "vulnerable area"]],
   [["Try every unit", "greedy · try all"], ["Keep the best", "greedy · keep best"], ["Stop", "greedy · stop", "greedy · result"], ["Best plan", "best plan"]],
   [["Select", "1 ·"], ["Expand", "2 ·"], ["Roll out", "3 ·"], ["Backpropagate", "4 ·"], ["Result", "bandit · result"], ["Best plan", "best plan"]],
   [["No locks", "no locks"], ["Best attack", "attacker"], ["Try each lock", "candidate"], ["Lock it", "lock"], ["Result", "result"], ["Attack left", "best plan"]],
-  [["Relevant sets", "honest"], ["First edit", "edit 1"], ["Second edit", "edit 2"]],
 ];
 root.className = "walk";
 root.innerHTML = MARKUP;
