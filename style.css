@@ -383,7 +383,7 @@ main:has(#walk) { max-width: none; }
 .t-node.best .t-card { stroke: var(--s-gold); stroke-width: 2.2; }
 .t-node.sel .t-card { stroke: var(--s-bad); stroke-width: 2.6; fill: var(--s-bad-t); }
 .t-node.fresh .t-card { stroke: var(--s-hit); stroke-width: 2.6; fill: var(--s-hit-t); animation: pulse 1s ease-out; }
-.t-node.done { opacity: .6; }
+.t-node.d1.done { opacity: .6; }
 .t-l1, .t-l2 { font-size: 14.5px; font-weight: 600; text-anchor: middle; }
 .stage svg text.t-l2 { font-weight: 500; fill: var(--s-dim); }
 .stage svg text.t-stat { font-size: 12.5px; text-anchor: middle; fill: var(--s-dim); font-variant-numeric: tabular-nums; }
@@ -454,3 +454,5 @@ pre.pseudo span.ln .res { display: block; font-style: normal; color: #15803d; fo
 .aff i.rm { background: var(--s-bad-t); color: var(--s-bad); } .aff i.add { background: var(--s-spur-t); color: var(--s-spur); }
 .cell-tree #wt-tree { overflow-x: auto; }
 .cell-tree #wt-tree svg { min-width: 760px; }
+.stage svg text.t-more { font-size: 12.5px; text-anchor: middle; fill: var(--s-dim); }
+.t-node.d2 .t-l1 { font-size: 13px; }

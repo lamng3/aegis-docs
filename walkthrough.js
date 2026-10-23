@@ -125,16 +125,18 @@ function makeGraph(el) {
 // ---------- the search tree ----------
 const heat = (t) => `color-mix(in srgb, var(--s-bad) ${Math.round(Math.min(1, Math.max(0, t)) * 100)}%, var(--s-low))`;
 function makeTree(el) {
-  // Top-down: the root card, a row of cards for the chains of one unit (the root's arms), and dots for the chains
-  // that extend them. Cards are keyed by chain, so they glide to their new places as the tree grows.
-  const TW = 1100, ROOT_Y = 38, D1_Y = 156, D2_Y = 268, ROLL_Y = 326, CH = 78;
-  const svg = S("svg", { viewBox: `0 0 ${TW} 352`, role: "img", "aria-label": "The search tree" });
+  // Top-down: the root card, a row of cards for the chains of one unit (the root's arms), and, for the one card in
+  // play, a row of smaller cards for the chains that extend it. Other cards show how many extensions were tried.
+  // Cards are keyed by chain, so they glide to their new places as the tree grows.
+  const TW = 1100, ROOT_Y = 38, D1_Y = 156, D2_Y = 292, ROLL_Y = 352, CH = 78, PH = 50;
+  const svg = S("svg", { viewBox: `0 0 ${TW} 380`, role: "img", "aria-label": "The search tree" });
   const edgeLayer = S("g"), nodeLayer = S("g"), over = S("g");
   svg.append(edgeLayer, nodeLayer, over);
   el.replaceChildren(svg);
   const nodes = new Map(), edges = new Map();
+  const sym = (a) => a.replace(/^remove /, "− ").replace(/^add /, "+ ");
   const cardLines = (unit) => {
-    const acts = unit.split(" ; ").map((a) => a.replace(/^remove /, "− ").replace(/^add /, "+ "));
+    const acts = unit.split(" ; ").map(sym);
     if (acts.length > 1) return acts.map((a) => short(a, 24));
     const [a] = acts;
     if (a.length <= 20 || !a.includes(" ⊑ ")) return [short(a, 24)];
@@ -145,11 +147,15 @@ function makeTree(el) {
   return (tree, o) => {
     const kids = tree.children, k = Math.max(kids.length, 1);
     const cw = Math.min(158, (TW - 24) / k - 12), place = new Map([["root", { x: TW / 2, y: ROOT_Y, depth: 0, n: tree }]]);
+    const firstOf = (id) => id && kids.find((c) => id === c.label || id.startsWith(c.label + " ; "));
+    const focus = firstOf(o.fresh && o.fresh.includes(" ; ") ? o.fresh : null) || firstOf(o.sel[2]) || firstOf(o.sel[1]) || firstOf(o.fresh) || firstOf(o.best);
     kids.forEach((c, i) => {
       const x = TW / 2 + (i - (kids.length - 1) / 2) * (cw + 12);
-      place.set(c.label, { x, y: D1_Y, depth: 1, n: c, parent: "root" });
-      const gap = Math.min(26, (cw - 10) / Math.max(c.children.length, 1));
-      c.children.forEach((g, j) => place.set(g.label, { x: x + (j - (c.children.length - 1) / 2) * gap, y: D2_Y, depth: 2, n: g, parent: c.label }));
+      place.set(c.label, { x, y: D1_Y, depth: 1, n: c, parent: "root", more: c === focus ? 0 : c.children.length });
+      if (c !== focus || !c.children.length) return;
+      const m = c.children.length, pw = Math.min(150, (TW - 24) / m - 12), total = m * (pw + 12) - 12;
+      const start = Math.max(12, Math.min(TW - 12 - total, x - total / 2));
+      c.children.forEach((g, j) => place.set(g.label, { x: start + pw / 2 + j * (pw + 12), y: D2_Y, depth: 2, n: g, parent: c.label, w: pw }));
     });
     const onBest = (id) => o.best && (o.best === id || o.best.startsWith(id + " ; "));
     const seen = new Set();
@@ -158,62 +164,49 @@ function makeTree(el) {
       const n = p.n, sel = o.sel.includes(id), fresh = o.fresh === id, best = id !== "root" && onBest(id);
       let nd = nodes.get(id);
       if (!nd) {
-        const g = S("g", { class: "t-node", style: `transform:translate(${p.x}px,${p.y}px)` }, S("title", {}, id === "root" ? "no edits yet" : id));
-        if (p.depth === 2) {
-          nd = { g, dot: S("circle", { r: 6 }), label: S("text", { class: "t-dlabel", y: 26, "text-anchor": "middle" }) };
-          g.append(nd.dot, nd.label);
-        } else {
-          const w = p.depth === 0 ? 176 : cw, h = p.depth === 0 ? 50 : CH;
-          nd = { g, box: S("rect", { class: "t-card", rx: 10 }), lines: [S("text", { class: "t-l1" }), S("text", { class: "t-l2" })], stat: S("text", { class: "t-stat" }),
-            track: S("rect", { class: "t-track", rx: 2, height: 4 }), bar: S("rect", { class: "t-bar", rx: 2, height: 4 }), star: S("text", { class: "t-star" }, "★"), w, h };
-          g.append(nd.box, ...nd.lines, nd.stat, nd.track, nd.bar, nd.star);
-        }
+        const g = S("g", { class: "t-node", style: `transform:translate(${p.x}px,${p.y + (p.depth === 2 ? -30 : 0)}px);opacity:0` }, S("title", {}, id === "root" ? "no edits yet" : id));
+        nd = { g, box: S("rect", { class: "t-card", rx: p.depth === 2 ? 8 : 10 }), lines: [S("text", { class: "t-l1" }), S("text", { class: "t-l2" })], stat: S("text", { class: "t-stat" }),
+          track: S("rect", { class: "t-track", rx: 2, height: 4 }), bar: S("rect", { class: "t-bar", rx: 2, height: 4 }), star: S("text", { class: "t-star" }, "★"), more: S("text", { class: "t-more" }) };
+        g.append(nd.box, ...nd.lines, nd.stat, nd.track, nd.bar, nd.star, nd.more);
         nodeLayer.append(g);
         nodes.set(id, nd);
       }
       nd.g.style.transform = `translate(${p.x}px,${p.y}px)`;
+      nd.g.style.opacity = "";
       nd.g.setAttribute("class", `t-node d${p.depth}${sel ? " sel" : ""}${fresh ? " fresh" : ""}${best ? " best" : ""}${n.done ? " done" : ""}`);
-      if (p.depth === 2) {
-        nd.dot.setAttribute("r", Math.min(11, 5 + 2 * Math.sqrt(n.visits)));
-        nd.dot.style.fill = heat(mean(n));
-        const show = sel || fresh || (best && o.best === id);
-        nd.label.textContent = show ? short(lastUnit(p.parent, id), 26) + (n.visits ? "" : `  ·  harm ${f2(n.harm)}`) : "";
-        const lx = Math.max(90 - p.x, Math.min(TW - 90 - p.x, 0));
-        nd.label.setAttribute("x", lx);
-      } else {
-        const w = p.depth === 0 ? 176 : cw, h = nd.h;
-        nd.w = w;
-        nd.box.setAttribute("x", -w / 2); nd.box.setAttribute("y", -h / 2); nd.box.setAttribute("width", w); nd.box.setAttribute("height", h);
-        const lines = p.depth === 0 ? ["start: no edits"] : cardLines(lastUnit("root", id));
-        nd.lines.forEach((t, j) => { t.textContent = lines[j] || ""; t.setAttribute("x", 0); t.setAttribute("y", (p.depth === 0 ? -6 : -h / 2 + 20) + j * 17); });
-        nd.stat.textContent = n.visits ? `n ${n.visits}   mean ${f2(mean(n))}` : p.depth === 0 ? "" : `new · harm ${f2(n.harm)}`;
-        nd.stat.setAttribute("x", 0); nd.stat.setAttribute("y", p.depth === 0 ? 13 : h / 2 - 15);
-        if (p.depth === 0) nd.stat.textContent = `${n.visits} visits`;
-        const bw = w - 24;
-        nd.track.setAttribute("x", -bw / 2); nd.track.setAttribute("y", h / 2 - 9); nd.track.setAttribute("width", p.depth ? bw : 0);
-        nd.bar.setAttribute("x", -bw / 2); nd.bar.setAttribute("y", h / 2 - 9); nd.bar.setAttribute("width", p.depth ? Math.max(2, bw * Math.min(1, mean(n))) : 0);
-        nd.bar.style.fill = heat(mean(n));
-        nd.star.setAttribute("x", w / 2 - 14); nd.star.setAttribute("y", -h / 2 + 15);
-      }
+      const w = p.depth === 0 ? 176 : p.depth === 1 ? cw : p.w, h = p.depth === 0 ? 50 : p.depth === 1 ? CH : PH;
+      nd.box.setAttribute("x", -w / 2); nd.box.setAttribute("y", -h / 2); nd.box.setAttribute("width", w); nd.box.setAttribute("height", h);
+      const unit = p.depth ? lastUnit(p.parent, id) : "";
+      const lines = p.depth === 0 ? ["start: no edits"] : p.depth === 1 ? cardLines(unit) : [short(unit.split(" ; ").map(sym).join("  "), Math.floor(w / 7.4))];
+      nd.lines.forEach((t, j) => { t.textContent = lines[j] || ""; t.setAttribute("x", 0); t.setAttribute("y", (p.depth === 0 ? -6 : p.depth === 1 ? -h / 2 + 20 : -h / 2 + 18) + j * 17); });
+      nd.stat.textContent = p.depth === 0 ? `${n.visits} visits` : n.visits ? `n ${n.visits}   mean ${f2(mean(n))}` : `new · harm ${f2(n.harm)}`;
+      nd.stat.setAttribute("x", 0); nd.stat.setAttribute("y", p.depth === 0 ? 13 : p.depth === 1 ? h / 2 - 15 : h / 2 - 13);
+      const bw = w - 20, by = h / 2 - (p.depth === 1 ? 9 : 7);
+      nd.track.setAttribute("x", -bw / 2); nd.track.setAttribute("y", by); nd.track.setAttribute("width", p.depth ? bw : 0);
+      nd.bar.setAttribute("x", -bw / 2); nd.bar.setAttribute("y", by); nd.bar.setAttribute("width", p.depth ? Math.max(2, bw * Math.min(1, mean(n))) : 0);
+      nd.bar.style.fill = heat(mean(n));
+      nd.star.setAttribute("x", w / 2 - 12); nd.star.setAttribute("y", -h / 2 + 15);
+      nd.more.textContent = p.more ? `+${p.more} next` : "";
+      nd.more.setAttribute("x", 0); nd.more.setAttribute("y", h / 2 + 17);
       if (p.parent) {
         let ed = edges.get(id);
         if (!ed) { ed = S("path", { class: "t-edge" }); edgeLayer.append(ed); edges.set(id, ed); }
-        const q = place.get(p.parent), y0 = q.y + (q.depth === 0 ? 25 : CH / 2), y1 = p.y - (p.depth === 1 ? CH / 2 : 8), my = (y0 + y1) / 2;
+        const q = place.get(p.parent), y0 = q.y + (q.depth === 0 ? 25 : CH / 2), y1 = p.y - h / 2, my = (y0 + y1) / 2;
         ed.setAttribute("d", `M${q.x} ${y0} C${q.x} ${my} ${p.x} ${my} ${p.x} ${y1}`);
-        ed.setAttribute("class", "t-edge" + (sel ? " sel" : "") + (best ? " best" : ""));
-        ed.style.strokeWidth = 1.2 + Math.min(6, Math.sqrt(n.visits) * 1.3);
+        ed.setAttribute("class", "t-edge" + (sel || fresh ? " sel" : "") + (best ? " best" : ""));
+        ed.style.strokeWidth = 1.4 + Math.min(6, Math.sqrt(n.visits) * 1.3);
       }
     }
     for (const [id, nd] of nodes) if (!seen.has(id)) { nd.g.remove(); nodes.delete(id); edges.get(id)?.remove(); edges.delete(id); }
     over.replaceChildren();
     for (const [id, u] of Object.entries(o.ucb || {})) {
       const p = place.get(id);
-      if (p) over.append(S("text", { class: "t-ucb", x: p.x, y: p.y - (p.depth === 1 ? CH / 2 + 7 : 14), "text-anchor": "middle" }, "UCB " + u));
+      if (p) over.append(S("text", { class: "t-ucb", x: p.x, y: p.y - (p.depth === 1 ? CH : PH) / 2 - 7, "text-anchor": "middle" }, "UCB " + u));
     }
     if (o.roll && place.get(o.roll.from)) {
-      const p = place.get(o.roll.from), y0 = p.y + (p.depth === 1 ? CH / 2 : 10), x2 = Math.min(Math.max(p.x, 120), TW - 160);
-      over.append(S("path", { class: "t-roll", d: `M${p.x} ${y0} C${p.x} ${y0 + 24} ${x2} ${ROLL_Y - 24} ${x2} ${ROLL_Y - 7}` }),
-        S("path", { class: "t-ghost", d: `M${x2} ${ROLL_Y - 7} l7 7 l-7 7 l-7 -7 z` }), S("text", { class: "t-harm", x: x2 + 13, y: ROLL_Y + 4 }, "rollout ends at harm " + f2(o.roll.harm)));
+      const p = place.get(o.roll.from), y0 = p.y + (p.depth === 1 ? CH / 2 : PH / 2), x2 = Math.min(Math.max(p.x, 120), TW - 200);
+      over.append(S("path", { class: "t-roll", d: `M${p.x} ${y0} C${p.x} ${y0 + 20} ${x2} ${ROLL_Y - 22} ${x2} ${ROLL_Y - 7}` }),
+        S("path", { class: "t-ghost", d: `M${x2} ${ROLL_Y - 7} l7 7 l-7 7 l-7 -7 z` }), S("text", { class: "t-harm", x: x2 + 13, y: ROLL_Y + 5 }, "rollout ends at harm " + f2(o.roll.harm)));
     }
     over.append(S("text", { class: "t-hud", x: 8, y: 16 }, o.hud || ""));
   };
