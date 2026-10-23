@@ -19,7 +19,7 @@
   <nav class="site" aria-label="Site">
     <a href="getting-started.html">Start</a>
     <a href="playground.html">Playground</a>
-    <a href="walkthrough.html">Step by step</a>
+    <a href="showcase.html">Showcase</a>
     <a href="reference.html">Reference</a>
     <label class="nav-button" for="nav-toggle">Menu</label>
     <a href="https://github.com/lamng3/aegis" class="pill">GitHub ↗</a>
@@ -35,7 +35,7 @@
     <div class="actions">
       <a class="btn solid" href="getting-started.html">Get started</a>
       <a class="btn" href="playground.html">Playground</a>
-      <a class="btn" href="walkthrough.html">Watch it step by step</a>
+      <a class="btn" href="showcase.html">Watch it work</a>
       <a class="btn" href="experiments.html">Experiments</a>
     </div>
   </div>
@@ -54,13 +54,13 @@
 </section>
 <section class="block" id="watch">
   <h2>Watch the attack search work</h2>
-  <p class="sub">A recorded run of the library's own search on a small ontology. The bandit grows its tree one iteration at a time while the ontology on the right is attacked. Pause, step, or switch to the affected area, greedy search, or locking. <a href="walkthrough.html">Open the full page</a>.</p>
+  <p class="sub">A recorded run of the library's own search on a small ontology. The bandit grows its tree one iteration at a time while the ontology on the right is attacked. Pause, step, or switch to the affected area, greedy search, or locking. <a href="showcase.html">Open the full page</a>.</p>
   <div role="group" id="walk" data-act="2" data-autoplay="true" aria-label="Step-by-step replay">Loading the recorded run…</div>
 </section>
 <section class="block">
   <h2>What it does</h2>
   <p class="sub">An agent reads its knowledge graph through an ontology. Aegis treats the ontology like data a database must defend.</p>
-  <div class="cards"><a class="card" href="walkthrough.html"><strong>Step by step</strong><span>Watch the attack search work: the affected area, greedy, the bandit&#x27;s tree, and the locks.</span></a><a class="card" href="playground.html"><strong>Playground</strong><span>Attack a small ontology in the browser: edit it, search for the worst chain, find the damage, and roll back.</span></a><a class="card" href="getting-started.html"><strong>Getting started</strong><span>Run the example: attack a small materials ontology, then recover.</span></a><a class="card" href="concepts.html"><strong>Concepts</strong><span>Counterfactual attacks, and the affected area that measures them.</span></a><a class="card" href="attacks.html"><strong>Attack search</strong><span>Greedy, beam, random, and UCT over the tree of edit chains.</span></a><a class="card" href="protection.html"><strong>Protection</strong><span>Lock the triples that leave the attacker&#x27;s best response least harmful.</span></a><a class="card" href="recovery.html"><strong>Recovery</strong><span>Find the last healthy state in the log and roll back, keeping honest edits.</span></a><a class="card" href="experiments.html"><strong>Experiments</strong><span>Four ontologies, with the numbers behind the demo.</span></a></div>
+  <div class="cards"><a class="card" href="showcase.html"><strong>Showcase</strong><span>Watch the attack search work: the affected area, greedy, the bandit&#x27;s tree, and the locks.</span></a><a class="card" href="playground.html"><strong>Playground</strong><span>Attack a small ontology in the browser: edit it, search for the worst chain, find the damage, and roll back.</span></a><a class="card" href="getting-started.html"><strong>Getting started</strong><span>Run the example: attack a small materials ontology, then recover.</span></a><a class="card" href="concepts.html"><strong>Concepts</strong><span>Counterfactual attacks, and the affected area that measures them.</span></a><a class="card" href="attacks.html"><strong>Attack search</strong><span>Greedy, beam, random, and UCT over the tree of edit chains.</span></a><a class="card" href="protection.html"><strong>Protection</strong><span>Lock the triples that leave the attacker&#x27;s best response least harmful.</span></a><a class="card" href="recovery.html"><strong>Recovery</strong><span>Find the last healthy state in the log and roll back, keeping honest edits.</span></a><a class="card" href="experiments.html"><strong>Experiments</strong><span>Four ontologies, with the numbers behind the demo.</span></a></div>
 </section>
 <section class="block"><div class="prose-home"><h2 id="what">What it is</h2>
 <p>An agent that answers questions over a knowledge graph reads the graph through an ontology. The ontology says which classes a query term covers and which links may be followed, so editing a few ontology triples changes the answers while every fact in the graph stays intact. Aegis studies that threat from both sides.</p>

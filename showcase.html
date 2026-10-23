@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Step by step — Aegis Manual</title>
+<title>Showcase — Aegis Manual</title>
 <meta name="description" content="A step-by-step replay of Aegis&#x27;s attack search on a small ontology: how the affected area is measured, why greedy search gets stuck, how the bandit finds a worse chain, and how locking answers it.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,7 +18,7 @@
   <nav class="site" aria-label="Site">
     <a href="getting-started.html">Start</a>
     <a href="playground.html">Playground</a>
-    <a href="walkthrough.html">Step by step</a>
+    <a href="showcase.html">Showcase</a>
     <a href="reference.html">Reference</a>
     <label class="nav-button" for="nav-toggle">Menu</label>
     <a href="https://github.com/lamng3/aegis" class="pill">GitHub ↗</a>
@@ -27,11 +27,11 @@
 <input id="nav-toggle" class="nav-toggle" type="checkbox">
 <div class="layout">
 <nav class="nav" aria-label="Manual pages">
-<a class="brand-desk" href="index.html">Aegis Manual</a><input class="search" id="q" type="search" placeholder="Search the manual" autocomplete="off"><ul id="results" hidden></ul><a href="index.html">Overview</a><a href="getting-started.html">Getting started</a><a href="playground.html">Playground</a><a href="walkthrough.html" aria-current="page">Step by step</a><a href="concepts.html">Concepts</a><a href="attacks.html">Attack search</a><a href="protection.html">Protection</a><a href="recovery.html">Recovery</a><a href="experiments.html">Experiments</a><a href="leaderboard.html">Leaderboard</a><a href="reference.html">Reference</a>
+<a class="brand-desk" href="index.html">Aegis Manual</a><input class="search" id="q" type="search" placeholder="Search the manual" autocomplete="off"><ul id="results" hidden></ul><a href="index.html">Overview</a><a href="getting-started.html">Getting started</a><a href="playground.html">Playground</a><a href="showcase.html" aria-current="page">Showcase</a><a href="concepts.html">Concepts</a><a href="attacks.html">Attack search</a><a href="protection.html">Protection</a><a href="recovery.html">Recovery</a><a href="experiments.html">Experiments</a><a href="leaderboard.html">Leaderboard</a><a href="reference.html">Reference</a>
 </nav>
 <main id="content">
 <p class="kicker">Watch it work</p>
-<h1>Step by step</h1>
+<h1>Showcase</h1>
 <p class="lede">Replay a real run of the attack search on the small materials ontology, one step at a time: the affected area, greedy search, the bandit's search tree, and the locks that defend.</p>
 
 <div class="callout" role="note"><span class="label">What this is</span><p>A recording of the library, not a simulation. <code>experiments/walkthrough/trace.py</code> runs Aegis's own affected-area ranking, greedy search, UCT, beam search, and best-response locking on the materials ontology of the <a href="playground.html">playground</a>, and writes every step down. This page replays it. The code on the left of each step is the library's, shortened; the line it is running is highlighted, with its result beside it.</p></div>

@@ -18,7 +18,7 @@ PAGES = [
     ("index", "Overview"),
     ("getting-started", "Getting started"),
     ("playground", "Playground"),
-    ("walkthrough", "Step by step"),
+    ("showcase", "Showcase"),
     ("concepts", "Concepts"),
     ("attacks", "Attack search"),
     ("protection", "Protection"),
@@ -48,7 +48,7 @@ LAYOUT = """<!DOCTYPE html>
   <nav class="site">
     <a href="getting-started.html">Start</a>
     <a href="playground.html">Playground</a>
-    <a href="walkthrough.html">Step by step</a>
+    <a href="showcase.html">Showcase</a>
     <a href="reference.html">Reference</a>
     <label class="nav-button" for="nav-toggle">Menu</label>
     <a href="https://github.com/lamng3/aegis" class="pill">GitHub ↗</a>
@@ -78,7 +78,7 @@ HEADER = """<header class="site">
   <nav class="site">
     <a href="getting-started.html">Start</a>
     <a href="playground.html">Playground</a>
-    <a href="walkthrough.html">Step by step</a>
+    <a href="showcase.html">Showcase</a>
     <a href="reference.html">Reference</a>
     <label class="nav-button" for="nav-toggle">Menu</label>
     <a href="https://github.com/lamng3/aegis" class="pill">GitHub ↗</a>
@@ -94,7 +94,7 @@ HEAD = """<meta charset="utf-8">
 <link rel="stylesheet" href="style.css">"""
 
 CARDS = [
-    ("walkthrough", "Step by step", "Watch the attack search work: the affected area, greedy, the bandit's tree, and the locks."),
+    ("showcase", "Showcase", "Watch the attack search work: the affected area, greedy, the bandit's tree, and the locks."),
     ("playground", "Playground", "Attack a small ontology in the browser: edit it, search for the worst chain, find the damage, and roll back."),
     ("getting-started", "Getting started", "Run the example: attack a small materials ontology, then recover."),
     ("concepts", "Concepts", "Counterfactual attacks, and the affected area that measures them."),
@@ -113,7 +113,7 @@ HOME = """<section class="hero">
     <div class="actions">
       <a class="btn solid" href="getting-started.html">Get started</a>
       <a class="btn" href="playground.html">Playground</a>
-      <a class="btn" href="walkthrough.html">Watch it step by step</a>
+      <a class="btn" href="showcase.html">Watch it work</a>
       <a class="btn" href="experiments.html">Experiments</a>
     </div>
   </div>
@@ -132,7 +132,7 @@ HOME = """<section class="hero">
 </section>
 <section class="block" id="watch">
   <h2>Watch the attack search work</h2>
-  <p class="sub">A recorded run of the library's own search on a small ontology. The bandit grows its tree one iteration at a time while the ontology on the right is attacked. Pause, step, or switch to the affected area, greedy search, or locking. <a href="walkthrough.html">Open the full page</a>.</p>
+  <p class="sub">A recorded run of the library's own search on a small ontology. The bandit grows its tree one iteration at a time while the ontology on the right is attacked. Pause, step, or switch to the affected area, greedy search, or locking. <a href="showcase.html">Open the full page</a>.</p>
   <div id="walk" data-act="2" data-autoplay="true" aria-label="Step-by-step replay">Loading the recorded run…</div>
 </section>
 <section class="block">
