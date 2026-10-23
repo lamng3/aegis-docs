@@ -305,16 +305,12 @@ main:has(.pg) { max-width: none; }
 .f1 { font-variant-numeric: tabular-nums; }
 .pg progress { accent-color: var(--primary); width: 10em; height: 8px; }
 
-/* Step by step page: a stage where the ontology and the search tree move together. Same palette as the art-visualization stepper:
+/* Showcase page: a stage where the ontology and the search tree move together. Always light, in the art-visualization palette:
    a light surface, red for the attack and the cursor, green for what is right, orange for what is wrong, blue for seeds. */
 main:has(#walk) { max-width: none; }
 .stage { --s-bg: #f8f9fb; --s-surface: #ffffff; --s-fg: #111111; --s-dim: #6b7280; --s-line: #e5e7eb; --s-edge: #b9c0cc; --s-track: #e8eaee; --s-low: #9db0dc;
   --s-hit: #15803d; --s-hit-t: #e3f3e9; --s-seed: #2563eb; --s-seed-t: #e2ebfd; --s-bad: #d00000; --s-bad-t: #fde7e7; --s-spur: #c2410c; --s-spur-t: #fdebe0; --s-gold: #b7791f; --s-gold-t: #fbf0d6; --s-prop: #8b7fd0;
   position: relative; border-radius: 16px; color: var(--s-fg); overflow: hidden; border: 1px solid var(--s-line); background: var(--s-bg); }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .stage { --s-bg: #131416; --s-surface: #1a1c20; --s-fg: #ececec; --s-dim: #9096a0; --s-line: #2a2d33; --s-edge: #4a5160; --s-track: #2a2d33; --s-low: #5a6c9c;
-    --s-hit: #4ade80; --s-hit-t: #12301f; --s-seed: #7aa2ff; --s-seed-t: #16254a; --s-bad: #ff6b6b; --s-bad-t: #3a1717; --s-spur: #fb923c; --s-spur-t: #3a2410; --s-gold: #e8b26a; --s-gold-t: #3a2d12; --s-prop: #a89be8; }
-}
 .stage::before { content: ""; position: absolute; inset: 0; pointer-events: none; background-image: radial-gradient(var(--s-line) 1px, transparent 1px); background-size: 24px 24px; opacity: .7; }
 .stage-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 4px; padding: 14px 14px 4px; }
 @media (max-width: 860px) { .stage-grid { grid-template-columns: minmax(0, 1fr); } }

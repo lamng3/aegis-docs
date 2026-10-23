@@ -367,10 +367,7 @@ const MARKUP = `
   <label>Speed <select id="wt-speed"><option value="slow">slow</option><option value="normal" selected>normal</option><option value="fast">fast</option></select></label>
   <span class="count" id="wt-count"></span>
 </div>
-<div class="code-grid">
-  <div><pre class="pseudo" id="wt-code" aria-label="Library code, current line highlighted"></pre></div>
-  <div class="panel-lite"><h3>Locals</h3><div class="vars" id="wt-vars"></div></div>
-</div>`;
+`;
 const acts = [areaAct(), greedyAct(), uctAct(), lockAct()];
 root.className = "walk";
 root.innerHTML = MARKUP;
@@ -393,9 +390,11 @@ function paint() {
   Q.forEach((q, j) => ring($("#g-q" + j), s.f1[q.q], s.f1[q.q] < 0.5 ? "var(--s-bad)" : s.f1[q.q] < 1 ? "var(--s-spur)" : "var(--s-hit)"));
   ring($("#g-harm"), s.harm);
   $("#wt-caption").replaceChildren(h("span", { class: "tag " + (step.cls || "") }, step.tag), h("span", { html: step.text }));
+  if (!$("#wt-code")) { /* no code panel */ } else {
   const lastOn = Math.max(...step.line), res = "  → " + step.vars.map(([k, v]) => `${k} = ${v}`).join("  ·  ");
   $("#wt-code").replaceChildren(...act.code.map((l, j) => h("span", { class: "ln" + (step.line.includes(j) ? " on" : "") }, l || " ", j === lastOn ? h("em", { class: "res" }, res) : null)));
   $("#wt-vars").replaceChildren(...step.vars.map(([k, v]) => h("div", {}, h("span", {}, k), h("code", {}, String(v)))));
+  }
   const sl = $("#wt-scrub"); sl.max = act.steps.length - 1; sl.value = st.i;
   $("#wt-count").textContent = `step ${st.i + 1} of ${act.steps.length}`;
   $("#wt-prev").disabled = st.i === 0; $("#wt-next").disabled = st.i === act.steps.length - 1;
