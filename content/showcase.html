@@ -6,7 +6,7 @@ description: A step-by-step replay of Aegis's attack search on a small ontology:
 -->
 <div class="callout" role="note"><span class="label">What this is</span><p>A recording of the library, not a simulation. <code>experiments/walkthrough/trace.py</code> runs Aegis's own impact ranking, greedy search, UCT, beam search, and best-response locking on the materials ontology of the <a href="playground.html">playground</a>, and writes every step down; this page replays it. Under the ontology, <strong>AFF</strong> is the affected area of the state shown, as <code>forensics.affected_area</code> computes it (after Fan et al., SIGMOD 2011): the answers each question lost and gained.</p></div>
 <div id="walk" aria-label="Step-by-step replay">Loading the recorded run…</div>
-<script src="walkthrough.js"></script>
+<script>/* Load the replay fresh: a cached page must never run an old one. */ fetch("walkthrough.js", { cache: "no-cache" }).then((r) => r.text()).then((t) => { const s = document.createElement("script"); s.textContent = t; document.body.append(s); });</script>
 <h2 id="how-to-read-it">How to read it</h2>
 <ol>
 <li><strong>Impact.</strong> Two questions are asked of the ontology. Each element is taken out in turn and both are asked again: the drop in mean F1 is that element's Δ. The elements with Δ above zero glow. They are the vulnerable area, the part the answers depend on, and what an attacker picks first. The AFF line shows which answers each removal changes.</li>

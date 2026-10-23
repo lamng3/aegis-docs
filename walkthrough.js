@@ -19,7 +19,7 @@ function h(tag, attrs = {}, ...kids) {
   return el;
 }
 const f2 = (x) => (x == null ? "–" : Number(x).toFixed(2));
-fetch("walkthrough-data.json").then((r) => r.json()).then(start).catch(() => { root.textContent = "The recorded run could not be loaded."; });
+fetch("walkthrough-data.json", { cache: "no-cache" }).then((r) => r.json()).then(start).catch(() => { root.textContent = "The recorded run could not be loaded."; });
 
 function start(W) {
 const NS = "http://www.w3.org/2000/svg";

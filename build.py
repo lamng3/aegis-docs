@@ -142,7 +142,7 @@ HOME = """<section class="hero">
 </section>
 <section class="block"><div class="prose-home">BODY</div></section>
 <script src="demo.js"></script>
-<script src="walkthrough.js"></script>"""
+<script>/* Load the replay fresh: a cached page must never run an old one. */ fetch("walkthrough.js", { cache: "no-cache" }).then((r) => r.text()).then((t) => { const s = document.createElement("script"); s.textContent = t; document.body.append(s); });</script>"""
 
 
 def home_page(meta, body):
