@@ -456,3 +456,29 @@ pre.pseudo span.ln .res { display: block; font-style: normal; color: #15803d; fo
 .cell-tree #wt-tree svg { min-width: 760px; }
 .stage svg text.t-more { font-size: 12.5px; text-anchor: middle; fill: var(--s-dim); }
 .t-node.d2 .t-l1 { font-size: 13px; }
+
+/* the best attack plan */
+.g-badge circle { fill: var(--s-surface); stroke: var(--s-bad); stroke-width: 2; stroke-dasharray: 3 3; }
+.g-badge text { font-size: 12px; font-weight: 700; fill: var(--s-bad) !important; }
+.g-badge.on circle { fill: var(--s-bad); stroke-dasharray: none; } .g-badge.on text { fill: #fff !important; }
+.g-badge.now circle { animation: badge 1.2s ease-out; }
+@keyframes badge { 0% { r: 11; } 30% { r: 15; } 100% { r: 11; } }
+.plan { padding: 6px 8px 4px; }
+.plan-title { margin: 0 0 10px; font-size: 14px; color: var(--s-fg); }
+.stops { list-style: none; margin: 0; padding: 0; position: relative; }
+.stops::before { content: ""; position: absolute; left: 13px; top: 14px; bottom: 14px; width: 2px; background: var(--s-line); }
+.stop { position: relative; display: grid; grid-template-columns: 28px 1fr; gap: 12px; padding: 0 0 14px; opacity: .55; transition: opacity .3s; }
+.stop.done, .stop.now { opacity: 1; }
+.stop-n { z-index: 1; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--font); background: var(--s-surface); border: 2px solid var(--s-edge); color: var(--s-dim); }
+.stop.done .stop-n { background: var(--s-bad-t); border-color: var(--s-bad); color: var(--s-bad); }
+.stop.now .stop-n { background: var(--s-bad); border-color: var(--s-bad); color: #fff; }
+.stop:first-child .stop-n { border-color: var(--s-hit); color: var(--s-hit); background: var(--s-hit-t); }
+.stop-body { min-width: 0; border: 1px solid var(--s-line); background: var(--s-surface); border-radius: 10px; padding: 8px 12px; }
+.stop.now .stop-body { border-color: var(--s-bad); box-shadow: 0 0 0 3px var(--s-bad-t); }
+.stop-body > b { font-size: 14px; font-weight: 600; }
+.stop-harm { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; margin: 6px 0 4px; font-size: 12.5px; color: var(--s-dim); }
+.stop-harm i { display: block; height: 8px; border-radius: 5px; background: var(--s-track); overflow: hidden; }
+.stop-harm i b { display: block; height: 100%; background: var(--s-bad); border-radius: 5px; transition: width .4s; }
+.stop-body .aff { padding: 2px 0 0; }
+.stop-body .p-note { padding: 2px 0 0; }
+.walk .plan, .walk .plan b, .walk .plan span, .walk .plan i, .walk .plan p, .walk .plan div { font-family: var(--font); }

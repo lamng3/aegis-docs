@@ -64,7 +64,8 @@ function makeGraph(el) {
     S("radialGradient", { id: "halo" }, S("stop", { offset: "0", style: "stop-color:var(--s-bad)", "stop-opacity": ".55" }), S("stop", { offset: "1", style: "stop-color:var(--s-bad)", "stop-opacity": "0" })),
     S("marker", { id: "arr", viewBox: "0 0 10 10", refX: "9", refY: "5", markerWidth: "7", markerHeight: "7", orient: "auto" }, S("path", { d: "M0 1 L9 5 L0 9 z", fill: "context-stroke" }))));
   const edgeLayer = S("g"), nodeLayer = S("g");
-  svg.append(edgeLayer, nodeLayer);
+  const badgeLayer = S("g");
+  svg.append(edgeLayer, nodeLayer, badgeLayer);
   const edges = new Map(), nodes = new Map();
   for (const [k, r] of allRels) {
     const a = posOf(r[0]), b = posOf(r[2]), dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy), ux = dx / len, uy = dy / len;
@@ -76,7 +77,7 @@ function makeGraph(el) {
     const lock = S("g", { class: "g-lock", opacity: 0, transform: `translate(${mid[0]} ${mid[1]})` },
       S("circle", { r: 11 }), S("path", { d: "M-3.5 -1 v-2.5 a3.5 3.5 0 0 1 7 0 v2.5" }), S("rect", { x: -5, y: -1, width: 10, height: 7, rx: 1.5 }));
     edgeLayer.append(path, x, lock);
-    edges.set(k, { path, x, lock });
+    edges.set(k, { path, x, lock, mid });
   }
   for (const c of allConcepts) {
     const [px, py] = posOf(c);
@@ -118,6 +119,15 @@ function makeGraph(el) {
       n.halo.style.opacity = gl ? 0.25 + gl * 0.75 : 0;
       n.tag.textContent = (spec.tags || {})[c] || "";
     }
+    // spec.plan: the edits of a best plan, numbered on the edge or concept each one touches; the first spec.planAt are applied.
+    badgeLayer.replaceChildren();
+    (spec.plan || []).forEach((stepLabel, i) => {
+      const what = stepLabel.replace(/^(remove|add) /, ""), e = edges.get(idOfLabel.get(what));
+      const [bx, by] = e ? e.mid : (() => { const [px, py] = posOf(what); return [px + R * 0.85, py - R * 0.85]; })();
+      const on = i < (spec.planAt ?? spec.plan.length), now = i === (spec.planAt ?? 0) - 1;
+      badgeLayer.append(S("g", { class: "g-badge" + (on ? " on" : "") + (now ? " now" : ""), transform: `translate(${bx} ${by - (e ? 16 : 0)})` },
+        S("circle", { r: 11 }), S("text", { "text-anchor": "middle", y: 4.5 }, i + 1)));
+    });
     return s;
   };
 }
@@ -286,6 +296,38 @@ function areaAct() {
     "    return candidate_units(onto, top)" ], steps };
 }
 
+// A best plan as a path: the honest ontology, then each edit, with the harm so far and the answers that edit changes.
+function planPanel(final, at, title) {
+  const stops = final.plan.map((p, i) => {
+    const st = W.states[p.key], prev = i ? W.states[final.plan[i - 1].key] : null;
+    const changes = prev ? Q.flatMap((q, qi) => {
+      const before = new Set(prev.answers[q.q]), after = new Set(st.answers[q.q]);
+      const lost = [...before].filter((c) => !after.has(c)), got = [...after].filter((c) => !before.has(c));
+      return lost.length || got.length ? [h("span", { class: "aff-q" }, qShort(qi) + " ", ...lost.map((c) => h("i", { class: "rm" }, "−" + c)), ...got.map((c) => h("i", { class: "add" }, "+" + c)))] : [];
+    }) : [];
+    const stop = h("li", { class: "stop" + (i === at ? " now" : i < at ? " done" : "") },
+      h("span", { class: "stop-n" }, i ? String(i) : "0"),
+      h("div", { class: "stop-body" },
+        h("b", {}, i ? p.step.replace(/^remove /, "remove ").replace(/^add /, "add ") : "The honest ontology"),
+        h("div", { class: "stop-harm" }, h("i", {}, h("b", { style: `width:${Math.round(st.harm * 100)}%` })), h("span", {}, "harm " + f2(st.harm))),
+        i ? h("div", { class: "aff" }, changes.length ? changes : h("span", { class: "aff-none" }, "no answer changes yet")) : h("div", { class: "p-note" }, "Every answer is correct.")));
+    return stop;
+  });
+  return h("div", { class: "plan" }, h("p", { class: "plan-title", html: title }), h("ol", { class: "stops" }, stops));
+}
+
+function planSteps(final, who, extra = {}) {
+  const n = final.plan.length - 1, title = `<b>Best plan</b> found by ${who}: ${n} edit${n === 1 ? "" : "s"}, harm <b>${f2(final.harm)}</b>`;
+  const steps = [{ tag: "best plan", cls: "attack", text: `<b>The best attack plan ${who} found</b>, as a path: ${esc(final.steps.join(", then "))}. The numbers on the ontology mark where each edit lands. Step through it to see what each edit does.`,
+    graph: { key: final.key, plan: final.steps, planAt: n, locked: extra.locked }, left: { plan: final, at: n, title }, ...extra.step }];
+  final.plan.slice(1).forEach((p, i) => {
+    const st = W.states[p.key], prev = W.states[final.plan[i].key];
+    steps.push({ tag: `best plan · edit ${i + 1}`, cls: "attack", text: `<b>Edit ${i + 1} of ${n}: ${esc(p.step)}.</b> Harm goes from ${f2(prev.harm)} to <b>${f2(st.harm)}</b>${i + 1 === n ? ", the end of the plan" : ""}.`,
+      graph: { key: p.key, plan: final.steps, planAt: i + 1, locked: extra.locked }, left: { plan: final, at: i + 1, title }, ...extra.step });
+  });
+  return steps;
+}
+
 function greedyAct() {
   const unit = (i) => W.units[i], steps = [];
   W.greedy.rounds.forEach((r, ri) => {
@@ -300,6 +342,7 @@ function greedyAct() {
   const fin = W.greedy.final;
   steps.push({ tag: "greedy · result", cls: "attack", line: [7], text: `<b>Greedy ends at harm ${f2(fin.harm)}.</b> Every single edit is weak on its own, so a method that adds the best edit each time cannot see that two weak edits together are far worse. The bandit, next, finds ${f2(W.uct.final.harm)}.`,
     graph: { key: fin.key }, left: { rows: [{ label: "Greedy", value: fin.harm, cls: "cur" }, { label: "Beam", value: W.beam.harm }, { label: "Bandit (UCT)", value: W.uct.final.harm, cls: "pick" }], note: "Same ontology, same budget of " + W.budget + " edits." }, vars: [["chain", fmtChain(fin.steps)], ["harm", f2(fin.harm)]] });
+  steps.push(...planSteps(fin, "greedy search"));
   return { name: "2 · Greedy", left: "Harm of each option", code: [
     "def greedy(harm, onto, units, budget):",
     "    chain, best = (), 0.0",
@@ -341,6 +384,7 @@ function uctAct() {
   const last = its[its.length - 1];
   steps.push({ tag: "bandit · result", cls: "good", line: [10], text: `<b>The bandit finds harm ${f2(U.final.harm)} in ${last.evaluations} evaluations:</b> ${esc(U.final.steps.join(", then "))}. Each edit alone does only 0.50, so greedy never took the first. Greedy stopped at ${f2(W.greedy.final.harm)}, and beam search at ${f2(W.beam.harm)}.`,
     tree: { tree: last.tree, sel: [], best: U.final.key, hud: hudOf(last.evaluations, U.final.harm) }, graph: { key: U.final.key }, vars: [["chain", fmtChain(U.final.steps)], ["harm", f2(U.final.harm)]], iter: its.length - 1 });
+  steps.push(...planSteps(U.final, "the bandit", { step: { tree: { tree: last.tree, sel: [], best: U.final.key, hud: hudOf(last.evaluations, U.final.harm) }, iter: its.length - 1 } }));
   return { name: "3 · Bandit", code: [
     "def uct(harm, onto, units, budget, evaluations, c=0.5):",
     "    root = Node(chain=())",
@@ -371,6 +415,7 @@ function lockAct() {
   });
   steps.push({ tag: "result", cls: "good", line: [6], text: `<b>${L.rounds.length} locks take the best attack from ${f2(L.none)} to ${f2(L.final)}.</b> Locking is a light mitigation: it does not stop every edit, it makes the worst one harder and sends it to a person.`,
     graph: { key: HONEST, locked: [...locked] }, left: { rows: [{ label: "No locks", value: L.none }, ...L.rounds.map((r, i) => ({ label: `${i + 1} lock${i ? "s" : ""}`, value: r.residual, cls: i === L.rounds.length - 1 ? "pick" : "" }))], note: "Residual harm as locks are added." }, vars: [["locked", locked.join(", ")], ["residual", f2(L.final)]] });
+  steps.push(...planSteps(L.final_attack, "the attacker against the locks", { locked: [...locked] }));
   return { name: "4 · Lock", left: "Residual harm", code: [
     "def lock_best_response(attacker, onto, units, m):",
     "    locks = []",
@@ -444,9 +489,9 @@ const acts = [areaAct(), greedyAct(), uctAct(), lockAct(), matchAct()];
 // The stages of each part, and which step tags belong to which stage.
 const PHASES = [
   [["Workload", "workload"], ["Reach", "reach"], ["Remove a concept", "scan concept"], ["Cut a relation", "scan relation"], ["Vulnerable area", "vulnerable area"]],
-  [["Try every unit", "greedy · try all"], ["Keep the best", "greedy · keep best"], ["Stop", "greedy · stop", "greedy · result"]],
-  [["Select", "1 ·"], ["Expand", "2 ·"], ["Roll out", "3 ·"], ["Backpropagate", "4 ·"], ["Result", "bandit · result"]],
-  [["No locks", "no locks"], ["Best attack", "attacker"], ["Try each lock", "candidate"], ["Lock it", "lock"], ["Result", "result"]],
+  [["Try every unit", "greedy · try all"], ["Keep the best", "greedy · keep best"], ["Stop", "greedy · stop", "greedy · result"], ["Best plan", "best plan"]],
+  [["Select", "1 ·"], ["Expand", "2 ·"], ["Roll out", "3 ·"], ["Backpropagate", "4 ·"], ["Result", "bandit · result"], ["Best plan", "best plan"]],
+  [["No locks", "no locks"], ["Best attack", "attacker"], ["Try each lock", "candidate"], ["Lock it", "lock"], ["Result", "result"], ["Attack left", "best plan"]],
   [["Relevant sets", "honest"], ["First edit", "edit 1"], ["Second edit", "edit 2"]],
 ];
 root.className = "walk";
@@ -465,8 +510,9 @@ function paint() {
   $("#wt-tree-cell").hidden = !useTree;
   if (useTree) {
     drawTree(step.tree.tree, { sel: step.tree.sel || [], ucb: step.tree.ucb, fresh: step.tree.fresh, roll: step.tree.roll, hud: step.tree.hud, best: step.tree.best });
-    $("#wt-bars").replaceChildren(armsPanel(step.tree.tree, (step.tree.sel || [])[1], W.uct.c));
-  } else $("#wt-bars").replaceChildren(barsPanel(step.left.rows, step.left.note));
+    if (!step.left?.plan) $("#wt-bars").replaceChildren(armsPanel(step.tree.tree, (step.tree.sel || [])[1], W.uct.c));
+  } else if (!step.left.plan) $("#wt-bars").replaceChildren(barsPanel(step.left.rows, step.left.note));
+  if (step.left?.plan) { $("#wt-left-title").textContent = "The best attack plan"; $("#wt-bars").replaceChildren(planPanel(step.left.plan, step.left.at, step.left.title)); }
   const s = drawGraph(step.graph);
   const ring = (el, v, col) => { const c = 2 * Math.PI * 17; el.querySelector(".val").setAttribute("stroke-dasharray", `${(c * Math.max(0, v)).toFixed(1)} ${c.toFixed(1)}`); el.querySelector("b").textContent = f2(v); if (col) el.querySelector(".val").style.stroke = col; };
   Q.forEach((q, j) => ring($("#g-q" + j), s.f1[q.q], s.f1[q.q] < 0.5 ? "var(--s-bad)" : s.f1[q.q] < 1 ? "var(--s-spur)" : "var(--s-hit)"));
